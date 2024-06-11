@@ -63,14 +63,14 @@
                     "format": "directory-path",
                     "description": "Path to HUMAnN3 nucleotide database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-0190035a020874b2b26a678a86dd3bd0/0190035a021079518f9579a8a1db7f05"
+                    "default": "/vol/data/databases/clowm/CLDB-01900362afd57ded827c2f9e934b07ea/01900362afdb7381ae9f8dfe0b87eaf2"
                 },
 				"humann_prot_db": {
                     "type": "string",
                     "format": "directory-path",
                     "description": "Path to HUMAnN3 protein database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-0190035a020874b2b26a678a86dd3bd0/0190035a021079518f9579a8a1db7f05"
+                    "default": "/vol/data/databases/clowm/CLDB-01900372f55678718c07a9fa387980cd/01900372f55d7dc7885a628697afc415"
                 }
 			},
             "required": [
