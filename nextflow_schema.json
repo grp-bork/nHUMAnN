@@ -1,0 +1,108 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/grp-bork/nHUMAnN/main/nextflow_schema.json",
+    "title": "nHUMAnN pipeline parameters",
+    "description": "nHUMAnN JSON schema",
+    "type": "object",
+    "definitions": {    
+        "preprocessing": {
+            "title": "preprocessing",
+            "type": "object",
+            "description": "Preprocessing parameters",
+            "default": "",
+            "properties": {
+                "qc_minlen": {
+                    "type": "integer",
+                    "description": "Minimum read length to pass quality control",
+                    "default": 45
+                },
+                "qc_params_shotgun": {
+                    "type": "string",
+                    "description": "bbduk quality control parameters",
+                    "default": "qtrim=rl trimq=25 maq=25 ktrim=r k=23 mink=11 hdist=1 ftm=5 entropy=0.5 entropywindow=50 entropyk=5 tpe tbo"
+                },
+                "remove_host_kraken2_db": {
+                    "type": "string",
+					"format": "directory-path",
+					"hidden": true,
+                    "description": "Path to a kraken2 database",
+					"default": ""
+                }
+            },
+            "required": [
+                "qc_minlen",
+                "qc_params_shotgun",
+                "remove_host_kraken2_db"
+            ]
+        },
+        "required": {
+            "title": "Required",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "input_dir": {
+                    "type": "string",
+                    "description": "Directory path to fastq files",
+                    "format": "directory-path"
+                },
+                "output_dir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Path to output directory"
+                },
+                "mp4_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Path to metaphlan4 database",
+					"hidden": true,
+                    "default": "/vol/data/databases/clowm/CLDB-0190034231947aec9710260cbaea023c/01900342319b7d5a9aade7c5f4497442"
+                },
+				"humann_nuc_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Path to HUMAnN3 nucleotide database",
+					"hidden": true,
+                    "default": "/vol/data/databases/clowm/CLDB-0190035a020874b2b26a678a86dd3bd0/0190035a021079518f9579a8a1db7f05"
+                },
+				"humann_prot_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Path to HUMAnN3 protein database",
+					"hidden": true,
+                    "default": "/vol/data/databases/clowm/CLDB-0190035a020874b2b26a678a86dd3bd0/0190035a021079518f9579a8a1db7f05"
+                }
+			},
+            "required": [
+                "input_dir",
+                "output_dir",
+				"mp4_db",
+				"samestr_marker_db"
+            ]
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/definitions/preprocessing"
+        },
+        {
+            "$ref": "#/definitions/required"
+        }
+    ],
+    "properties": {
+        "run_preprocessing": {
+            "type": "boolean",
+            "default": true
+        },
+        "remove_host": {
+            "type": "boolean"
+        },
+        "drop_orphans": {
+            "type": "boolean"
+        },
+        "kraken2_min_hit_groups": {
+            "type": "integer",
+            "default": 10
+        }
+    }
+}

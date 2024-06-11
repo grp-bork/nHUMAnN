@@ -1,0 +1,78 @@
+# i/o parameters
+# Path to input directory on remote file system
+# remote_input_dir: "/path/to/remote/reads/"
+
+# XOR
+
+# Path to local input directory
+# input_dir: "/path/to/local/reads/"
+
+# Where are the final results published?
+output_dir: "/path/to/output/directory"
+
+# How are the final results published?
+# By default, files are copied from the work-dir.
+# Valid settings: "copy", "move", "link", "symlink"
+# ATT: "link" does not work on all filesystems, such as some /scratch volumes
+publish_mode: "copy"
+
+
+# workflow parameters
+
+# run preprocessing/qc workflow
+# alternative parameter: skip_preprocessing
+run_preprocessing: true
+
+# run host-decontamination subworkflow
+remove_host: false
+
+# ignore orphan reads after qc
+# vknight: true
+# nevermore: false
+# alternative parameter: keep_orphans
+drop_orphans: false
+
+# ignore chimeric reads (unclassified reads with mate classified as host) after decon
+# vknight: true
+# nevermore: false
+drop_chimeras: false
+
+skip_alignment: true
+
+# qc parameters
+# (also refer to: https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbduk-guide/)
+
+# minimum read length [bp]
+# NGLess functional profiling: 45
+# 16S GAGA2: 100
+qc_minlen: 45
+
+# bbduk wgs
+# qtrim=rl trimq=3 : gentle quality trimming (only discard bases < phred 3; phred 2 = junk marker) on either side (rl) of the read
+# maq=25 : discard reads below average quality of pred 25
+# ref=?? ktrim=r k=23 mink=11 hdist=1 tpe tbo : right-side k-mer based adapter clipping with 1 mismatch allowed, try overlap-detection (tbo), and trim pairs to same length (tpe) upon adapter detection -- NOTE: ref-parameter is set within workflow
+# ftm=5 : get rid of (n*5)+1st base (last sequencing cycle illumina garbage) -- NOTE: unset for preprocessed data
+# entropy=0.5 entropywindow=50 entropyk=5 : discard low complexity sequences
+qc_params_shotgun: "qtrim=rl trimq=3 maq=21 ktrim=r k=23 mink=11 hdist=1 ftm=5 entropy=0.5 entropywindow=50 entropyk=5 tpe tbo"
+
+
+# decontamination parameters
+
+# path to a kraken2 database for host-removal
+remove_host_kraken2_db: "/g/scb/zeller/schudoma/kraken2/hg38_silva_genome"
+
+# kraken2_min_hit_groups
+kraken2_min_hit_groups: 10
+
+
+# profiling parameters
+
+# run profiling?
+skip_profiling: false
+
+# metaphlan4 database
+mp4_db: "/scratch/schudoma/databases/metaphlan4/mpa_vOct22_CHOCOPhlAnSGB_202212"
+
+run_humann3: true
+humann_nuc_db: "/scratch/schudoma/databases/humann/full_chocophlan_db/"
+humann_prot_db: "/scratch/schudoma/databases/humann/uniref90_annotated_v201901b_full/"
