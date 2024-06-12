@@ -26,7 +26,7 @@
 					"format": "directory-path",
 					"hidden": true,
                     "description": "Path to a kraken2 database",
-					"default": ""
+					"default": "/vol/data/databases/clowm/CLDB-018fde8b0aa373a5ba7d3236bb921cc9/018fde8b0aac74889c57f7b1af5f87cb/hg38_silva_genome"
                 }
             },
             "required": [
@@ -56,7 +56,7 @@
                     "format": "directory-path",
                     "description": "Path to metaphlan4 database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-0190034231947aec9710260cbaea023c/01900342319b7d5a9aade7c5f4497442"
+                    "default": "/vol/data/databases/clowm/CLDB-0190034231947aec9710260cbaea023c/01900c514077794fa92645bc6a3ee4db"
                 },
 				"humann_nuc_db": {
                     "type": "string",
@@ -70,7 +70,7 @@
                     "format": "directory-path",
                     "description": "Path to HUMAnN3 protein database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-01900372f55678718c07a9fa387980cd/01900372f55d7dc7885a628697afc415"
+                    "default": "/vol/data/databases/clowm/CLDB-01900372f55678718c07a9fa387980cd/01900c54af457b5a909a449482340ace"
                 }
 			},
             "required": [
