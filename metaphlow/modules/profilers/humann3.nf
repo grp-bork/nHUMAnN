@@ -25,6 +25,7 @@ process reduce_metaphlan_profiles {
 
 process generate_humann_joint_index {
     container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
+    label "process_high"
 	
 	input:
 		path(mp_reduced_profiles)
@@ -47,6 +48,7 @@ process generate_humann_joint_index {
 
 process run_humann3 {
     container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
+    label "process_high"
 
     input:
         tuple val(sample), path(mp_profile), path(fastq_files)

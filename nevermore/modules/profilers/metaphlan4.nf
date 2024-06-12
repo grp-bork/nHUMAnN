@@ -1,6 +1,7 @@
 process run_metaphlan4 {
 	container "quay.io/biocontainers/metaphlan:4.1.0--pyhca03a8a_0"
 	tag "${sample.id}"
+	label "process_high"
 	
 	input:
 	tuple val(sample), path(fastqs)
