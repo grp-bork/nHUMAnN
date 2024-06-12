@@ -76,7 +76,9 @@
             "required": [
                 "input_dir",
                 "output_dir",
-				"mp4_db"
+				"mp4_db",
+				"humann_nuc_db",
+				"humann_prot_db"
             ]
         }
     },
