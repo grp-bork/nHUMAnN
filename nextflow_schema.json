@@ -76,8 +76,7 @@
             "required": [
                 "input_dir",
                 "output_dir",
-				"mp4_db",
-				"samestr_marker_db"
+				"mp4_db"
             ]
         }
     },
