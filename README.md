@@ -1,6 +1,13 @@
 # nHUMAnN
 
-nHUMAnN is a nextflow workflow for running HUMAnN3 profiling based on Metaphlan4. The workflow includes optional read preprocessing and host/human decontamination steps. 
+nHUMAnN is a nextflow workflow for running HUMAnN3 based on Metaphlan4 profiles via joint index generation. The workflow includes optional read preprocessing and host/human decontamination steps. 
+
+Due to compatibility issues between current CHOCOPhlAn databases and recent versions of HUMAnN3, nHUMAnN makes use of a patched HUMAnN3 version obtainable as a [Docker container](registry.git.embl.de/schudoma/humann3-docker:latest).
+
+![nevermore_workflow](docs/nevermore.svg)
+![HUMAnN3_subworkflow](docs/humann3.svg)
+
+
 
 ## Prerequisites & Requirements
 
@@ -61,7 +68,7 @@ On the command line:
 
 An nHUMAnN run is controlled by environment-specific parameters (s. [run.config](config/run.config)) and studiy-specific parameters (s. [params.yml](config/params.yml)). The parameters in the `params.yml` can be specified on the command line as well.
 
-You can either clone metaphlow from GitHub and run it as follows
+You can either clone nHUMAnN from GitHub and run it as follows
 
 ```
 git clone https://github.com/grp-bork/nHUMAnN.git
@@ -80,7 +87,7 @@ nHUMAnN supports fastq files. These can be uncompressed (but shouldn't be!) or c
 
 #### Per-sample input directories
 
-All files in a sample directory will be associated with name of the sample folder. Paired-end mate files need to have matching prefixes. Mates 1 and 2 can be specified with suffixes `_[12]`, `_R[12]`, `.[12]`, `.R[12]`. Lane IDs or other read id modifiers have to precede the mate identifier. Files with names not containing either of those patterns will be assigned to be single-ended. Metaphlow assumes samples that consist of both single and paired end files to be paired end with all single end files being orphans (quality control survivors). 
+All files in a sample directory will be associated with name of the sample folder. Paired-end mate files need to have matching prefixes. Mates 1 and 2 can be specified with suffixes `_[12]`, `_R[12]`, `.[12]`, `.R[12]`. Lane IDs or other read id modifiers have to precede the mate identifier. Files with names not containing either of those patterns will be assigned to be single-ended. nHUMAnN assumes samples that consist of both single and paired end files to be paired end with all single end files being orphans (quality control survivors). 
 
 
 
