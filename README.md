@@ -1,6 +1,6 @@
 # nHUMAnN
 
-nHUMAnN is a nextflow workflow for running HUMAnN3 based on Metaphlan4 profiles via joint index generation. The workflow includes optional read preprocessing and host/human decontamination steps. 
+nHUMAnN is a nextflow workflow for running HUMAnN3 based on Metaphlan4 profiles via joint index generation. The workflow includes optional read preprocessing and host/human decontamination steps provided by the [nevermore](https://github.com/cschu/nevermore) workflow library.
 
 Due to compatibility issues between current CHOCOPhlAn databases and recent versions of HUMAnN3, nHUMAnN makes use of a patched HUMAnN3 version obtainable as a [Docker container](registry.git.embl.de/schudoma/humann3-docker:latest).
 
