@@ -1,7 +1,8 @@
 process reduce_metaphlan_profiles {
     // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
     // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
-    container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    // container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    container "ghcr.io/grp-bork/nhumann:main"
     label "default"
 
 	input:
@@ -29,7 +30,8 @@ process reduce_metaphlan_profiles {
 process generate_humann_joint_index {
     // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
     // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
-    container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    // container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    container "ghcr.io/grp-bork/nhumann:main"
 
     label "process_high"
 	
@@ -56,7 +58,8 @@ process run_humann3 {
     // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
     // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
     publishDir params.output_dir, mode: "copy"
-    container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    // container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    container "ghcr.io/grp-bork/nhumann:main"
 
     label "process_high"
 
