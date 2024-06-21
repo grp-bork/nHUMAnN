@@ -34,6 +34,8 @@ process qc_bbduk {
     def r1_files = reads.findAll( { it.name.endsWith("_R1.fastq.${compression}") } )
 	def r2_files = reads.findAll( { it.name.endsWith("_R2.fastq.${compression}") } )
 
+    def qenc_str = (params.phred64 != null && params.phred64 != false) ? "qin=64" : ""
+
     def read1 = ""
     def orphans = ""
     if (r1_files.size() != 0) {
@@ -73,7 +75,7 @@ process qc_bbduk {
     set -e -o pipefail
 
     mkdir -p qc_reads/${sample.id}/ stats/qc/bbduk/
-    bbduk.sh -Xmx${maxmem}g t=${task.cpus} ${trim_params} ${stats_out} ${read1} ${read2}
+    bbduk.sh -Xmx${maxmem}g t=${task.cpus} ${trim_params} ${qenc_str} ${stats_out} ${read1} ${read2}
     ${orphan_filter}
     ${orphan_check}
 

@@ -1,7 +1,16 @@
+// this nonsense parameter-rearrangement is necessary for nf-core schema/clowm compatibility
+
+params.subsample_random_seed = 313
 params.subsample = [:]
-params.subsample.random_seed = 313
+if (!params.subsample.random_seed) {
+	params.subsample.random_seed = params.subsample_random_seed
+}
+
 
 process calculate_library_size_cutoff {
+	label "tiny"
+
+
 	input:
 	path(readcounts)
 	val(percentile)
@@ -11,7 +20,7 @@ process calculate_library_size_cutoff {
 
 	script:
 	"""
-	#!/usr/bin/env python
+	#!/usr/bin/env python3
 	
 	import glob
 	import statistics
@@ -25,13 +34,23 @@ process calculate_library_size_cutoff {
 		)
 	)
 	percentile = ${percentile}
-	percentiles = statistics.quantiles(d.values(), n=100)
-	mean_low_counts = statistics.mean(v for v in d.values() if v < percentiles[percentile - 1])
+	try:
+		percentiles = statistics.quantiles(d.values(), n=100)
+	except statistics.StatisticsError:
+		percentiles = None
+	if percentiles is not None:
+		mean_low_counts = statistics.mean(v for v in d.values() if v < percentiles[percentile - 1])
+	else:
+		mean_low_counts = list(d.values())[0]
 
 	with open('library_sizes.txt', 'wt') as _out:
 		print(*('sample', 'size', 'do_subsample', 'target_size'), sep='\\t', file=_out)
 		for k, v in d.items():
-			print(k, v, int(not v < percentiles[percentile - 1]), int(mean_low_counts + 0.5), sep='\\t', file=_out)
+			if percentiles is not None:
+				do_subsample = v >= percentiles[percentile - 1]
+			else:
+				do_subsample = False
+			print(k, v, int(do_subsample), int(mean_low_counts + 0.5), sep='\\t', file=_out)
 
 	print(mean_low_counts)
 
@@ -43,6 +62,7 @@ process calculate_library_size_cutoff {
 
 process subsample_reads {
 	container "quay.io/biocontainers/seqtk:1.4--he4a0461_2"
+	label "medium"
 
 	input:
 	tuple val(sample), path(fastqs), val(target_size)

@@ -15,9 +15,21 @@ def keep_orphans = (params.keep_orphans || false)
 
 def asset_dir = "${projectDir}/nevermore/assets"
 
-params.subsample = [:]
+// this nonsense parameter-rearrangement is necessary for nf-core schema/clowm compatibility
 
-print asset_dir
+print "PARAMS_IN_PREP_BEFORE: ${params}"
+
+params.subsample_subset = null
+params.subsample_percentile = 100.0
+params.subsample = [:]
+if (!params.subsample.subset) {
+	params.subsample.subset = params.subsample_subset
+}
+if (!params.subsample.percentile) {
+	params.subsample.percentile = params.subsample_percentile
+}
+
+print "PARAMS_IN_PREP_AFTER: ${params}"
 
 process concat_singles {
     input:
@@ -42,7 +54,7 @@ workflow nevermore_simple_preprocessing {
 
 	main:
 		rawcounts_ch = Channel.empty()
-		if (params.run_qa || params.subsample.subset) {
+		if (params.run_qa || (params.subsample.subset && params.subsample.percentile < 100.0 && params.subsample.percentile > 0.0)) {
 
 			fastqc(fastq_ch, "raw")
 			rawcounts_ch = fastqc.out.counts
@@ -55,7 +67,9 @@ workflow nevermore_simple_preprocessing {
 				)
 			}
 
-			if (params.subsample.subset) {
+			if (params.subsample.subset && params.subsample.percentile < 100.0 && params.subsample.percentile > 0.0) {
+
+				fastq_ch.dump(pretty: true, tag: "fastq_ch")
 				
 				fastq_ch
 					.branch {
@@ -63,16 +77,19 @@ workflow nevermore_simple_preprocessing {
 						no_subsample: true
 					}
 					.set { check_subsample_ch }
+
+				check_subsample_ch.subsample.dump(pretty: true, tag: "check_subsample_ch")
+				check_subsample_ch.no_subsample.dump(pretty: true, tag: "check_no_subsample_ch")
 				// subsample_ch = fastq_ch
 				// 	.filter { params.subsample.subset == "all" || it[0].library_source == params.subsample.subset }
 				// subsample_ch.dump(pretty: true, tag: "subsample_ch")
-
+				
 				calculate_library_size_cutoff(
 					fastqc.out.counts
 						.filter { params.subsample.subset == "all" || it[0].library_source == params.subsample.subset }
 						.map { sample, counts -> return counts }
 						.collect(),
-					params.subsample.percentile
+					params.subsample.percentile, 
 				)
 				calculate_library_size_cutoff.out.library_sizes.view()
 

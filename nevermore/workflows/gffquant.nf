@@ -40,25 +40,10 @@ workflow gffquant_flow {
 				Channel.from(params.gq_collate_columns.split(","))
 			)
 
-		collate_feature_counts(feature_count_ch, (params.gq_panda) ? ".pd.txt" : ".txt.gz")
-
-	// 	feature_count_ch = feature_count_ch
-	// 		.map { sample, files -> return files }
-	// 		.flatten()
-	// 		.filter { !it.name.endsWith("Counter.txt.gz") }
-	// 		.filter { params.collate_gene_counts || !it.name.endsWith("gene_counts.txt.gz") }
-	// 		.map { file -> 
-	// 			def category = file.name
-	// 				.replaceAll(/\.txt\.gz$/, "")
-	// 				.replaceAll(/.+\./, "")
-	// 			return tuple(category, file)
-	// 		}
-	// 		.groupTuple(sort: true)
-	// 		.combine(
-	// 			Channel.from(params.gq_collate_columns.split(","))
-	// 		)
-
-	// 	collate_feature_counts(feature_count_ch)
+		collate_feature_counts(
+			feature_count_ch,
+			(params.future_features ? ((params.gq_panda) ? ".pd.txt" : ".txt.gz") : "")
+		)
 
 	emit:
 

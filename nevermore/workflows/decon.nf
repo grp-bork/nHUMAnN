@@ -1,4 +1,5 @@
 include { remove_host_kraken2_individual; remove_host_kraken2 } from "../modules/decon/kraken2"
+include { hostile } from "../modules/decon/hostile"
 include { sortmerna } from "../modules/decon/sortmerna"
 
 
@@ -29,12 +30,16 @@ workflow nevermore_decon {
 
 			}
 	
-			if (params.remove_host) {
-	
-				remove_host_kraken2_individual(preprocessed_ch, params.remove_host_kraken2_db)
-	
-				preprocessed_ch = remove_host_kraken2_individual.out.reads				
-	
+			if (params.remove_host == "hostile") {
+
+				hostile(preprocessed_ch, params.hostile_db)
+				preprocessed_ch = hostile.out.reads
+
+			} else if ((params.remove_host != false && params.remove_host != null ) || params.remove_host == "kraken") {
+
+				remove_host_kraken2_individual(preprocessed_ch, params.remove_host_kraken2_db)	
+				preprocessed_ch = remove_host_kraken2_individual.out.reads
+
 			}
 
 		emit:

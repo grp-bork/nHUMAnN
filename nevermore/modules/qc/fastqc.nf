@@ -1,5 +1,6 @@
 process fastqc {
     container "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0"
+    label "medium"
 
     input:
     tuple val(sample), path(reads)

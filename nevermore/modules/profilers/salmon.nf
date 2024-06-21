@@ -2,6 +2,7 @@ params.profilers.salmon.index.k = 31
 
 process salmon_index {
 	container "quay.io/biocontainers/salmon:1.10.3--hecfa306_0"
+	label "medium"
 
 	input:
 	tuple val(sample), path(genes)
@@ -24,6 +25,7 @@ params.profilers.salmon.quant.libtype = "IU"
 
 process salmon_quant {
 	container "quay.io/biocontainers/salmon:1.10.3--hecfa306_0"
+	label "medium"
 	// label "align"
 
 	input:

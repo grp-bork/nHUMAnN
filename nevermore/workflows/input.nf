@@ -7,8 +7,6 @@ params.bam_input_pattern = "**.bam"
 
 def bam_suffix_pattern = params.bam_input_pattern.replaceAll(/\*/, "")
 
-def input_dir = (params.input_dir) ? params.input_dir : params.remote_input_dir
-
 
 process transfer_fastqs {
 	input:

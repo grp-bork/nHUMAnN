@@ -1,5 +1,6 @@
 process kallisto_index {
 	container "quay.io/biocontainers/kallisto:0.50.1--hc877fd6_1"
+	label "medium"
 
 	input:
 	tuple val(sample), path(genes)
@@ -11,15 +12,18 @@ process kallisto_index {
 	"""
 	mkdir -p kallisto/index/${sample.id}/
 
-	kallisto index -i kallisto/index/${sample.id}.idx {genes}
+	kallisto index -i kallisto/index/${sample.id}.idx ${genes}
 	"""
 	
 }
 
+params.profilers = [:]
+params.profilers.kallisto = [:]
 params.profilers.kallisto.bootstrap = 100
 
 process kallisto_quant {
 	container "quay.io/biocontainers/kallisto:0.50.1--hc877fd6_1"
+	label "medium"
 
 	input:
 	tuple val(sample), path(fastqs), path(kallisto_index)
@@ -50,8 +54,8 @@ process kallisto_quant {
 	def calc_libstats = ""
 	if (single_reads) {
 
-		calc_libstats += "mean_length=\$(gzip -dc ${input_files} | awk 'NR%4==2 {sum_len+=length($0); n+=1; } END { printf('%d\n', sum_len / n); }')\n"
-		calc_libstats += "std_length=\$(gzip -dc ${input_files} | awk -v mean=\$mean_length 'NR%4==2 {sum_len+=(length($0)-mean)**2; n+=1; } END { printf('%d\n', sqrt(sum_len/(n-1)))}')"
+		calc_libstats += "mean_length=\$(gzip -dc ${input_files} | awk 'NR%4==2 {sum_len+=length(\$0); n+=1; } END { printf('%d\n', sum_len / n); }')\n"
+		calc_libstats += "std_length=\$(gzip -dc ${input_files} | awk -v mean=\$mean_length 'NR%4==2 {sum_len+=(length(\$0)-mean)**2; n+=1; } END { printf('%d\n', sqrt(sum_len/(n-1)))}')"
 		single_flags += "--single"
 		single_flags += " -l \$mean_length -s \$std_length"
 

@@ -1,28 +1,38 @@
-params.gq_aligner = "bwa_mem"
+params.gq_aligner = "bwa"
+params.gq_min_seqlen = params.min_alignment_length
+params.gq_single_end_library = params.single_end_library
+params.gq_min_identity = params.min_identity
+params.gq_mode = "genes"
+params.gq_ambig_mode = "1overN"
+
 
 process stream_gffquant {
+	publishDir params.output_dir, mode: "copy"
 	label "gffquant"
+	label "large"
+
 	tag "gffquant.${sample}"
 
 	input:
 		tuple val(sample), path(fastqs)
 		path(gq_db)
-		path(reference)
+		// path(reference)
 	output:
 		tuple val(sample), path("profiles/${sample}/*.{txt.gz,pd.txt}"), emit: results //, optional: (!params.gq_panda) ? true : false
 		tuple val(sample), path("profiles/${sample}/*.{txt.gz,pd.txt}"), emit: profiles //, optional: (params.gq_panda) ? true : false
 		tuple val(sample), path("logs/${sample}.log")
+		tuple val(sample), path("alignments/${sample}/${sample}*.sam"), emit: alignments, optional: true
 
 	script:
 			def gq_output = "-o profiles/${sample}/${sample}"
 
 			def gq_params = "-m ${params.gq_mode} --ambig_mode ${params.gq_ambig_mode}"
-			gq_params += (params.gq_strand_specific) ? " --strand_specific" : ""
+			// gq_params += (params.gq_strand_specific) ? " --strand_specific" : ""
 			gq_params += (params.gq_min_seqlen) ? (" --min_seqlen " + params.gq_min_seqlen) : ""
 			gq_params += (params.gq_min_identity) ? (" --min_identity " + params.gq_min_identity) : ""
-			gq_params += (params.gq_restrict_metrics) ? " --restrict_metrics ${params.gq_restrict_metrics}" : ""
-			gq_params += (params.gq_keep_alignments) ? " --keep_alignment_file ${sample}.sam" : ""
-			gq_params += (params.gq_unmarked_orphans) ? " --unmarked_orphans" : ""
+			// gq_params += (params.gq_restrict_metrics) ? " --restrict_metrics ${params.gq_restrict_metrics}" : ""
+			// gq_params += (params.gq_keep_alignments) ? " --keep_alignment_file ${sample}.sam" : ""
+			// gq_params += (params.gq_unmarked_orphans) ? " --unmarked_orphans" : ""
 
 			gq_params += " -t ${task.cpus}"
 
@@ -55,20 +65,27 @@ process stream_gffquant {
 				// input_files += " --fastq-orphans \$(find . -maxdepth 1 -type l -name '*singles*.fastq.gz')"
 			}
 	
-			def gq_cmd = "gffquant ${gq_output} ${gq_params} --db GQ_DATABASE --reference \$(readlink ${reference}) --aligner ${params.gq_aligner} ${input_files}"
-
+			def gq_cmd = "gffquant ${gq_output} ${gq_params} --db GQ_DATABASE --aligner ${params.gq_aligner} ${input_files}"
+			def mkdir_alignments = (params.keep_alignment_file != null && params.keep_alignment_file != false) ? "mkdir -p alignments/${sample}/" : ""
+			// --reference \$(readlink ${reference})
+			// cp -v ${gq_db}/*sqlite3 GQ_DATABASE
+			// ref=\$(ls ${gq_db}/*.bwt | sed "s/\.bwt//")
 			"""
 			set -e -o pipefail
 			mkdir -p logs/ tmp/ profiles/
+			${mkdir_alignments}
 			echo 'Copying database...'
-			cp -v ${gq_db} GQ_DATABASE
-			${gq_cmd} &> logs/${sample}.log
+			cp -v \$(dirname \$(readlink ${gq_db}))/*sqlite3 GQ_DATABASE
+
+
+			${gq_cmd} --reference \$(readlink ${gq_db}) &> logs/${sample}.log
 			rm -rfv GQ_DATABASE* tmp/
 			"""
 
 }
 
 process run_gffquant {
+	publishDir params.output_dir, mode: "copy"
 	label "gffquant"
 
 	input:
@@ -135,24 +152,10 @@ process run_gffquant {
 
 params.gq_collate_columns = "uniq_scaled,combined_scaled"
 
-// process collate_feature_counts {
-
-// 	input:
-// 	tuple val(sample), path(count_tables), val(column)
-
-// 	output:
-// 	path("collated/*.txt.gz"), emit: collated, optional: true
-
-// 	script:
-// 	"""
-// 	mkdir -p collated/
-
-// 	collate_counts . -o collated/collated -c ${column}
-// 	"""
-// }
-
 process collate_feature_counts {
+	publishDir params.output_dir, mode: "copy"
 	label "collate_profiles"
+	label "gffquant"
 
 	input:
 	tuple val(sample), path(count_tables), val(column)
@@ -162,9 +165,10 @@ process collate_feature_counts {
 	path("collated/*.txt.gz"), emit: collated, optional: true
 
 	script:
+	def suffix_param = (suffix != "") ? "--suffix ${suffix}" : ""
 	"""
 	mkdir -p collated/
 
-	collate_counts . -o collated/collated -c ${column} --suffix ${suffix}
+	collate_counts . -o collated/collated -c ${column} ${suffix_param}
 	"""
 }

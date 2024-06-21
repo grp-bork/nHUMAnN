@@ -1,4 +1,6 @@
 process collate_stats {
+    label "default"
+
     input:
     path(stats_files)
 
