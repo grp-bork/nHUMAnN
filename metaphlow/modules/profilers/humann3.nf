@@ -2,6 +2,7 @@ process reduce_metaphlan_profiles {
     // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
     // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
     container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    label "default"
 
 	input:
 		path(mp_collated_profiles)
