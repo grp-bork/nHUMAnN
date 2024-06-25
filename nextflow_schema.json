@@ -56,7 +56,7 @@
                     "format": "directory-path",
                     "description": "Path to metaphlan4 database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-0190034231947aec9710260cbaea023c/01900c514077794fa92645bc6a3ee4db"
+                    "default": "/vol/data/databases/clowm/CLDB-0190034231947aec9710260cbaea023c/019031cc8c507432b3da4d50a89ba8e6"
                 },
 				"humann_nuc_db": {
                     "type": "string",
