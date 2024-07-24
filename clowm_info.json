@@ -8,6 +8,10 @@
   "exampleParameters": {
     "input_dir": "s3://example-data-nhumann/"
   },
+  "dois": [
+    "10.1038/s41587-023-01688-w",
+    "10.7554/eLife.65088"
+  ],
   "resourceParameters": [
     "remove_host_kraken2_db",
     "mp4_db",
