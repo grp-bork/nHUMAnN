@@ -1,0 +1,17 @@
+{
+  "inputParameters": [
+    "input_dir"
+  ],
+  "outputParameters": [
+    "output_dir"
+  ],
+  "exampleParameters": {
+    "input_dir": "s3://example-data-nhumann/"
+  },
+  "resourceParameters": [
+    "remove_host_kraken2_db",
+    "mp4_db",
+    "humann_nuc_db",
+    "humann_prot_db"
+  ]
+}
