@@ -4,8 +4,8 @@ nHUMAnN is a nextflow workflow for running HUMAnN3 based on Metaphlan4 profiles 
 
 Due to compatibility issues between current CHOCOPhlAn databases and recent versions of HUMAnN3, nHUMAnN makes use of a patched HUMAnN3 version obtainable as a [Docker container](registry.git.embl.de/schudoma/humann3-docker:latest).
 
-![nevermore_workflow](docs/nevermore.svg)
-![HUMAnN3_subworkflow](docs/humann3.svg)
+![nevermore_workflow](https://github.com/grp-bork/nHUMAnN/blob/main/docs/nevermore.svg)
+![HUMAnN3_subworkflow](https://github.com/grp-bork/nHUMAnN/blob/main/docs/humann3.svg)
 
 
 
@@ -66,7 +66,7 @@ On the command line:
 
 ## Running nHUMAnN
 
-An nHUMAnN run is controlled by environment-specific parameters (s. [run.config](config/run.config)) and studiy-specific parameters (s. [params.yml](config/params.yml)). The parameters in the `params.yml` can be specified on the command line as well.
+An nHUMAnN run is controlled by environment-specific parameters (s. [run.config](https://github.com/grp-bork/nHUMAnN/blob/main/config/run.config)) and studiy-specific parameters (s. [params.yml](https://github.com/grp-bork/nHUMAnN/blob/main/config/params.yml)). The parameters in the `params.yml` can be specified on the command line as well.
 
 You can either clone nHUMAnN from GitHub and run it as follows
 
