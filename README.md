@@ -62,11 +62,11 @@ Decontamination is done with `kraken2` and additionally requires `seqtk`.
 
 Host removal requires a `kraken2` host database.
 
-### Metaphlan Profiling
+## Metaphlan Profiling
 
 The default supported `MetaPhlAn` version is 4.
 
-#### CHOCOPhlAn database for Metaphlan4
+### CHOCOPhlAn database for Metaphlan4
 
 Get the `mpa_vOct22_CHOCOPhlAnSGB_202212` database from [here](http://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/mpa_vOct22_CHOCOPhlAnSGB_202212.tar), unpack the tarball, and point the `--mp4_db` parameter to the database's root directory. 
 
@@ -82,7 +82,11 @@ On the command line:
 --mp4_db "/path/to/mpa_vOct22_CHOCOPhlAnSGB_202212/"
 ```
 
-#### HUMAnN3 databases
+## HUMAnN Profiling
+
+The default supported `HUMAnN3` version is 3.
+
+### HUMAnN databases
 
 Get the annotated `CHOCOPhlAn` db from [here](http://huttenhower.sph.harvard.edu/humann_data/chocophlan/full_chocophlan.v201901_v31.tar.gz) and the annotated uniref db from [here](http://huttenhower.sph.harvard.edu/humann_data/uniprot/uniref_annotated/uniref50_annotated_v201901b_full.tar.gz), unpack the tarballs and set the respective parameters.
 
