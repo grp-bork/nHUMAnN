@@ -36,7 +36,7 @@ Due to compatibility issues between current `CHOCOPhlAn` databases and recent ve
 #### Citation
 This workflow: badge tbd.
 
-Others:
+Also cite:
 ```
 Beghini F, McIver LJ, Blanco-Míguez A, et al. Integrating taxonomic, functional, and strain-level profiling of diverse microbial communities with bioBakery 3. Elife. 2021;10:e65088. Published 2021 May 4. doi:10.7554/eLife.65088
 ```
