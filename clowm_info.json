@@ -9,6 +9,7 @@
     "input_dir": "s3://example-data-nhumann/"
   },
   "dois": [
+    "10.5281/zenodo.13143261",
     "10.1038/s41587-023-01688-w",
     "10.7554/eLife.65088"
   ],
