@@ -1,16 +1,11 @@
-Usage
-=====
-
-
-### General Usage
-
-
+---
+# Usage
+## CLI
 ```
-nextflow run /path/to/metaphlow --input_dir </path/to/read_files> --output_dir </path/to/output_dir> [PARAMETERS]
+nextflow run /path/to/nHUMAnN --input_dir </path/to/read_files> --output_dir </path/to/output_dir> [PARAMETERS]
 ```
 
-### Input data
-
+## Input
 * Fastq files need to be ordered into a sample-per-folder structure (s. tree below).
 * Supported file endings are `.fastq,.fq,.fastq.gz,.fq.gz,.fastq.bz2,.fq.bz2`
 * Files in sample-specific folders will automatically be assigned to a sample labeled with the folder name.
@@ -23,42 +18,15 @@ In the following example, the path to the input dataset needs to be set as `--in
 ```
 /path/to/read_files
 └── sample1
-        ├── sample1_R1.fastq.gz
-        └── sample2_R2.fastq.gz
-
+  ├── sample1_R1.fastq.gz
+  └── sample2_R2.fastq.gz
 ```
+## Parameters
 
-
-
-
-### Parameters
-
-* `run_preprocessing [true]`
-
-  Run preprocessing (quality control, [human] host removal, rRNA removal.)
-
-* `remove_host [true]`
-
-  Run host removal.
-
-* `drop_orphans [false]`
-
-  Drop paired-end reads whose mate did not survive quality processing.
-
-* `qc_minlen [45]`
-
-  Drop reads shorter than `qc_minlen` base pairs.
-
-* `qc_params_shotgun ["qtrim=rl trimq=3 maq=25 ktrim=r k=23 mink=11 hdist=1 ftm=5 entropy=0.5 entropywindow=50 entropyk=5 tpe tbo"]`
-
-  bbduk parameter string
-
-* `remove_host_kraken2_db`
-
-  Path to a kraken2 database for host removal
-
-* `kraken2_min_hit_groups [10]`
-
-  kraken2 sensitivity cutoff
-
-* ``
+* `run_preprocessing [true]`: Run preprocessing (quality control, [human] host removal, rRNA removal).
+* `remove_host [true]`: Run host removal.
+* `drop_orphans [false]`: Drop paired-end reads whose mate did not survive quality processing.
+* `qc_minlen [45]`: Drop reads shorter than `qc_minlen` base pairs.
+* `qc_params_shotgun ["qtrim=rl trimq=3 maq=25 ktrim=r k=23 mink=11 hdist=1 ftm=5 entropy=0.5 entropywindow=50 entropyk=5 tpe tbo"]`: bbduk parameter string.
+* `remove_host_kraken2_db`: Path to a kraken2 database for host removal.
+* `kraken2_min_hit_groups [10]`: kraken2 sensitivity cutoff.
