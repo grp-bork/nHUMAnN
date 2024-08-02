@@ -34,7 +34,7 @@ The `nHUMAnN workflow` is a nextflow workflow for running `HUMAnN3` based on `Me
 Due to compatibility issues between current `CHOCOPhlAn` databases and recent versions of `HUMAnN3`, `nHUMAnN` makes use of a patched `HUMAnN3` version obtainable as a [Docker container](registry.git.embl.de/schudoma/humann3-docker:latest).
 
 #### Citation
-This workflow: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13143261.svg)](https://doi.org/10.5281/zenodo.13143261)
+This workflow: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13143260.svg)](https://doi.org/10.5281/zenodo.13143260)
 
 Also cite:
 ```
