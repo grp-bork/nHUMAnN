@@ -6,7 +6,7 @@
     "output_dir"
   ],
   "exampleParameters": {
-    "input_dir": "s3://example-data-nhumann/"
+    "input_dir": "s3://workflow-exampledata/nhumann/"
   },
   "dois": [
     "10.5281/zenodo.13143260",
