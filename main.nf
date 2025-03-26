@@ -11,7 +11,8 @@ include { humann3 } from "./metaphlow/workflows/humann3"
 workflow {
 
 	fastq_input(
-		Channel.fromPath(params.input_dir + "/*", type: "dir"),
+		// Channel.fromPath(params.input_dir + "/*", type: "dir"),
+		Channel.fromPath(params.input_dir + "/**"),
 		Channel.of(null)
 	)
 
