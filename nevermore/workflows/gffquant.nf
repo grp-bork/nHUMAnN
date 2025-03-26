@@ -12,7 +12,7 @@ workflow gffquant_flow {
 	main:
 
 		if (params.gq_stream) {
-			stream_gffquant(input_ch, params.gffquant_db, params.reference)
+			stream_gffquant(input_ch, params.gffquant_db)
 			feature_count_ch = (params.gq_panda) ? stream_gffquant.out.profiles : stream_gffquant.out.results
 			counts = stream_gffquant.out.results
 		} else {
