@@ -89,7 +89,7 @@ workflow nevermore_simple_preprocessing {
 						.filter { params.subsample.subset == "all" || it[0].library_source == params.subsample.subset }
 						.map { sample, counts -> return counts }
 						.collect(),
-					params.subsample.percentile, 
+					params.subsample.percentile
 				)
 				calculate_library_size_cutoff.out.library_sizes.view()
 

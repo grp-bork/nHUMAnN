@@ -5,6 +5,8 @@ include { classify_sample; classify_sample_with_library_info } from "../modules/
 
 params.bam_input_pattern = "**.bam"	
 
+params.input_dir_structure = "tree"
+
 def bam_suffix_pattern = params.bam_input_pattern.replaceAll(/\*/, "")
 
 
@@ -34,13 +36,13 @@ process transfer_bams {
 
 
 process prepare_fastqs {
+	label "default"
 
 	input:
-		path(files)
-		val(remote_input)
-		val(library_suffix)
+		tuple val(sample), path(files), val(remote_input), val(library_suffix)
 	output:
-		path("fastq/*/*.fastq.{gz,bz2}"), emit: fastqs
+		tuple val(sample), path("fastq/${sample}/${sample}*.fastq.{gz,bz2}"), emit: pairs, optional: true
+		tuple val(sample), path("fastq/${sample}.singles/${sample}*.fastq.{gz,bz2}"), emit: singles, optional: true
 		path("sample_library_info.txt"), emit: library_info
 
   script:
@@ -53,7 +55,9 @@ process prepare_fastqs {
 		def libsfx_param = (library_suffix != null) ? "--add_sample_suffix ${library_suffix}" : ""
 		
 		"""
-		prepare_fastqs.py -i . -o fastq/ -p ${input_dir_prefix} ${custom_suffixes} ${remote_option} ${remove_suffix} ${libsfx_param}
+		mkdir -p reads/${sample}
+		ls ${files} | xargs -I{} sh -c 'ln -s ../../{} reads/${sample}/'
+		prepare_fastqs.py -i reads -o fastq -p ${input_dir_prefix} ${custom_suffixes} ${remote_option} ${remove_suffix} ${libsfx_param}
 		"""
 }
 
@@ -94,32 +98,61 @@ workflow fastq_input {
 		libsfx
 	
 	main:
-		prepare_fastqs(fastq_ch.collect(), (params.remote_input_dir != null || params.remote_input_dir), libsfx)
+		if (params.input_dir_structure == "flat") {
+			fastq_ch = fastq_ch
+				.map { file -> [ 
+					file.getName()
+						.replaceAll(/\.(fastq|fq)(\.(gz|bz2))?$/, "")
+						.replaceAll(/[._]R?[12]$/, "")
+						.replaceAll(/[._]singles$/, ""),
+					file
+				] }
+
+		} else {
+			fastq_ch = fastq_ch
+				.map { file -> return tuple(file.getParent().getName(), file) }
+		}
+
+		fastq_ch = fastq_ch
+			// .map { file -> return tuple(file.getParent().getName(), file) }
+			.groupTuple(by: 0)
+			.combine(libsfx)
+			.map { sample_id, files, suffix -> return tuple(sample_id, files, (params.remote_input_dir != null || params.remote_input_dir), suffix) }
+
+		if (params.ignore_samples) {
+			ignore_samples = params.ignore_samples.split(",")
+			print "Ignoring samples: ${ignore_samples}"
+			fastq_ch = fastq_ch
+				.filter { !ignore_samples.contains(it[0]) }
+		}
+
+		fastq_ch.dump(pretty: true, tag: "fastq_ch")
+		prepare_fastqs(fastq_ch)
+		prepare_fastqs.out.singles.mix(prepare_fastqs.out.pairs).dump(pretty: true, tag: "prepare_fastqs_out")
 
 		library_info_ch = prepare_fastqs.out.library_info
 			.splitCsv(header:false, sep:'\t', strip:true)
-			.map { row -> 
+			.map { row ->
 				return tuple(row[0], row[1])
 			}
 
-		fastq_ch = prepare_fastqs.out.fastqs
-			.flatten()
-			.map { file -> 
-				def sample = file.getParent().getName()
-				return tuple(sample, file)
-			}
-			.groupTuple(sort: true)
-			.join(library_info_ch, remainder: true)
-			.map { sample_id, files, library_is_paired ->
+		prepped_fastq_ch = prepare_fastqs.out.singles
+			.map { sample_id, files -> return tuple("${sample_id}.singles", files, false) }
+			.mix(prepare_fastqs.out.pairs
+				.map { sample_id, files -> return tuple(sample_id, files, true) }
+			)
+			.join(by: 0, library_info_ch)
+			.map { sample_id, files, is_paired, library_is_paired ->
 				def meta = [:]
 				meta.id = sample_id
-				meta.is_paired = (files instanceof Collection && files.size() == 2)
+				meta.is_paired = is_paired
 				meta.library = (library_is_paired == "1") ? "paired" : "single"
-				return tuple(meta, files)
+				return tuple(meta, [files].flatten())
 			}
+		prepped_fastq_ch.dump(pretty: true, tag: "prepped_fastq_ch")
 
 	emit:
-		fastqs = fastq_ch
+		fastqs = prepped_fastq_ch
 }
 
 

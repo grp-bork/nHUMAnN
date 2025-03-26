@@ -12,10 +12,21 @@ def do_stream = params.gq_stream
 def do_preprocessing = (!params.skip_preprocessing || params.run_preprocessing)
 
 params.do_name_sort = true
-params.align = [:]
-params.align.run_minimap2 = false
-params.align.run_bwa = false
 
+if (params.align == null) {
+
+	params.align = [:]
+}
+
+if (params.align.run_minimap2 == null) {
+	params.align.run_minimap2 = false
+}
+
+if (params.align.run_bwa == null) {
+	params.align.run_bwa = false
+}
+
+print "PARAMS-ALIGN: ${params}"
 
 workflow nevermore_align {
 
@@ -74,7 +85,12 @@ workflow nevermore_align {
 				}
 				.groupTuple(sort: true)
 
-			merge_and_sort(aligned_ch, true)
+			merge_and_sort(aligned_ch
+				.map { sample_id, bamfiles ->
+					def meta = [:]
+					meta.id = sample_id
+					return tuple(meta, bamfiles)
+				}, true)
 
 			alignment_ch = alignment_ch
 				.mix(merge_and_sort.out.bam)

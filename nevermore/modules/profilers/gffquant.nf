@@ -93,11 +93,11 @@ process run_gffquant {
 	path(gq_db)
 
 	output:
-	tuple val(sample), path("profiles/${sample}/*.txt.gz"), emit: results
-	tuple val(sample), path("logs/${sample}.log")
+	tuple val(sample), path("profiles/${sample.id}/*.txt.gz"), emit: results
+	tuple val(sample), path("logs/${sample.id}.log")
 
 	script:
-	def gq_output = "-o profiles/${sample}/${sample}"
+	def gq_output = "-o profiles/${sample.id}/${sample.id}"
 
 	def gq_params = "-m ${params.gq_mode} --ambig_mode ${params.gq_ambig_mode}"
 	gq_params += (params.gq_strand_specific) ? " --strand_specific" : ""
@@ -126,8 +126,8 @@ process run_gffquant {
 
 		mk_aln_sam += "echo 'Making alignment stream...'\n"
 		if (alignments instanceof Collection && alignments.size() >= 2) {
-			mk_aln_sam += "cat ${sample}.sam > tmp/alignments.sam \n"
-			mk_aln_sam += "grep -v '^@' ${sample}.singles.sam >> tmp/alignments.sam"
+			mk_aln_sam += "cat ${sample.id}.sam > tmp/alignments.sam \n"
+			mk_aln_sam += "grep -v '^@' ${sample.id}.singles.sam >> tmp/alignments.sam"
 		} else {
 			mk_aln_sam += "ln -s ${alignments[0]} tmp/alignments.sam"
 		}
@@ -145,7 +145,7 @@ process run_gffquant {
 	echo 'Copying database...'
 	cp -v ${gq_db} gq_db.sqlite3
 	${mk_aln_sam}
-	${gq_cmd} &> logs/${sample}.log
+	${gq_cmd} &> logs/${sample.id}.log
 	rm -rfv gq_db.sqlite3* tmp/
 	"""
 }

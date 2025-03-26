@@ -46,6 +46,11 @@
                     "description": "Directory path to fastq files",
                     "format": "directory-path"
                 },
+                "input_dir_structure": {
+                    "type": "string",
+                    "description": "Are the input files stored at base-level of input directory ('flat') or as one subdirectory per sample ('tree')?",
+                    "default": "tree"
+                },
                 "output_dir": {
                     "type": "string",
                     "format": "directory-path",
