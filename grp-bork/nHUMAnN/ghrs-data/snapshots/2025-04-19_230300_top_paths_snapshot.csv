@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/grp-bork/nHUMAnN,6,6
+/grp-bork/nHUMAnN/tree/main,5,1
+/grp-bork/nHUMAnN/blob/main/main.nf,4,1
+/grp-bork/nHUMAnN/tree/main/nevermore,3,1
+/grp-bork/nHUMAnN/blob/main/nevermore/modules/profilers/metaphlan4.nf,2,1
+/grp-bork/nHUMAnN/tree/main/nevermore/modules,2,1
+/grp-bork/nhumann,1,1
+/grp-bork/nHUMAnN/blob/main/metaphlow/modules/profilers/humann3.nf,1,1
+/grp-bork/nHUMAnN/blob/main/metaphlow/workflows/humann3.nf,1,1
+/grp-bork/nHUMAnN/blob/main/nevermore/modules/profilers/metaphlan3.nf,1,1
