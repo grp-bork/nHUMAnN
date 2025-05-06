@@ -21,7 +21,7 @@ RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.s
   rm -f Miniconda3-latest-Linux-x86_64.sh 
 
 
-ENV PATH /opt/software/miniconda3/bin:$PATH
+ENV PATH=/opt/software/miniconda3/bin:$PATH
 
 RUN conda install -c conda-forge -c bioconda -y 'diamond==2.0.15'
 
