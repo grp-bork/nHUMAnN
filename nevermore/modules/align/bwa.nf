@@ -1,5 +1,8 @@
 process bwa_mem_align {
-    container "registry.git.embl.de/schudoma/align-docker:latest"
+    cpus 4
+    memory { 20.GB * task.attempt }
+    time { 3.d * task.attempt }
+    container "registry.git.embl.org/schudoma/align-docker:latest"
     label 'align'
 
     input:
@@ -12,10 +15,17 @@ process bwa_mem_align {
 
     script:
     def maxmem = task.memory.toGiga()
-    def align_cpus = 4 // figure out the groovy division garbage later (task.cpus >= 8) ?
-    def sort_cpus = 4
+    
+    def align_cpus = 1
+    def sort_cpus = 1
+    if (task.cpus > 1) {
+        def half_cpus = task.cpus.intdiv(2)
+        sort_cpus = half.cpus
+        align_cpus = task.cpus - half.cpus
+    }
     def blocksize = "-K 10000000"  // shamelessly taken from NGLess
     
+    // def sort_cmd = "samtools collate -@ ${sort_cpus} -o ${sample.id}.bam - tmp/collated_bam"
     
     r1_files = reads.findAll( { it.name.endsWith("_R1.fastq.gz") && !it.name.matches("(.*)(singles|orphans|chimeras)(.*)") } )
     r2_files = reads.findAll( { it.name.endsWith("_R2.fastq.gz") } )
@@ -27,14 +37,9 @@ process bwa_mem_align {
     } else if (orphan_files.size() != 0) {
         r1_input += "${orphan_files.join(' ')}"
     }
-    def pre_sort_cmd_1 = "sortbyname.sh -Xmx${maxmem}g in=${r1_input} out=${sample.id}_R1.sorted.fastq.gz interleaved=f"
-    def pre_sort_cmd_2 = ""
     def r2_input = ""
-    def reads2 = ""
     if (r2_files.size() != 0) {
         r2_input += "${r2_files.join(' ')}"
-        pre_sort_cmd_2 = "sortbyname.sh -Xmx${maxmem}g in=${r2_input} out=${sample.id}_R2.sorted.fastq.gz interleaved=f"
-        reads2 = "${sample.id}_R2.sorted.fastq.gz"
     }
 
     def sort_cmd = (do_name_sort) ? "samtools collate -@ ${sort_cpus} -o ${sample.id}.bam - tmp/collated_bam" : "samtools sort -@ ${sort_cpus} -o ${sample.id}.bam -"
@@ -42,16 +47,10 @@ process bwa_mem_align {
     def read_group_id = (sample.library == "paired") ? ((sample.is_paired) ? 2 : 2) : 1
     def read_group = "'@RG\\tID:${read_group_id}\\tSM:${sample.id}'"
 
-    pre_sort_cmd_1 = ""
-    pre_sort_cmd_2 = ""
-
     """
     set -e -o pipefail
     mkdir -p tmp/
-    ${pre_sort_cmd_1}
-    ${pre_sort_cmd_2}
-    bwa mem -R ${read_group} -a -t ${align_cpus} ${blocksize} \$(readlink ${reference}) ${r1_input} ${r2_input} | samtools view -F 4 -buSh - | ${sort_cmd}
+    bwa mem -R ${read_group} -a -t ${align_cpus} ${blocksize} \$(readlink ${reference}) ${r1_input} ${r2_input} | samtools view -buSh - | ${sort_cmd}
     rm -rvf tmp/ *.sorted.fastq.gz
     """
-    // sortbyname.sh -Xmx${maxmem}g in=${sample.id}_R1.fastq.gz out=${sample.id}_R1.sorted.fastq.gz interleaved=f
 }

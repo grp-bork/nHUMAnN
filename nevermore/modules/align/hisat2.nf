@@ -1,7 +1,5 @@
 process hisat2_build {
-    container "quay.io/biocontainers/hisat2:2.2.1--hdbdd923_6"
-    // we need a hisat2/samtools mixed container
-    // container "registry.git.embl.de/schudoma/hisat2-docker:latest"
+    container "registry.git.embl.org/schudoma/hisat2-docker:latest"
 
     input:
     tuple val(sample), path(genomeseq)
@@ -23,9 +21,7 @@ process hisat2_build {
 }
 
 process hisat2_align {
-    // container "quay.io/biocontainers/hisat2:2.2.1--hdbdd923_6"
-    // we need a hisat2/samtools mixed container
-    container "registry.git.embl.de/schudoma/hisat2-docker:latest"
+    container "registry.git.embl.org/schudoma/hisat2-docker:latest"
 
     input:
     tuple val(sample), path(fastqs), path(index)

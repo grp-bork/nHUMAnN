@@ -1,5 +1,5 @@
 process minimap2_align {
-	container "registry.git.embl.de/schudoma/minimap2-docker:latest"
+	container "registry.git.embl.org/schudoma/minimap2-docker:latest"
 	label 'align'
 
 	input:
