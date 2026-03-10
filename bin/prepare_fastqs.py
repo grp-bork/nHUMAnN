@@ -22,6 +22,19 @@ logger = logging.getLogger(__name__)
 
 
 def check_pairwise(r1, r2):
+	d = {}
+	for prefix, fn in itertools.chain(r1, r2):
+		d.setdefault(prefix[:-1], []).append((prefix, fn))
+	for prefix, reads in d.items():
+		if len(reads) == 2:
+			yield reads[0][1], reads[1][1]
+		elif len(reads) == 1:
+			yield (None, reads[0][1]) if reads[0][0][-1] == "2" else (reads[0][1], None)
+		else:
+			raise ValueError(f"Weird number of reads found: {reads}")
+
+
+def check_pairwise_old(r1, r2):
 	""" Checks if two sets of read files contain the same prefixes.
 
 	Input:
@@ -80,11 +93,13 @@ def transfer_multifiles(files, dest, remote_input=False, compression=None):
 		if compression in ("gz", "bz2"):
 			# multiple compressed files can just be concatenated
 			logging.debug('transfer_multifiles: compression=%s, remote_input=%s, action=concatenate', compression, remote_input)
+			logging.debug('  cmd: %s', ' '.join(cat_cmd))
 			with open(dest, "wt") as _out:
 				subprocess.run(cat_cmd, stdout=_out)
 		else:
 			# multiple uncompressed files will be cat | gzipped
 			logging.debug('transfer_multifiles: compression=%s, remote_input=%s, action=concatenate+gzip', compression, remote_input)
+			logging.debug('  cmd: %s', ' | '.join((' '.join(cat_cmd), "gzip -c -")))
 			cat_pr = subprocess.Popen(cat_cmd, stdout=subprocess.PIPE)
 			with open(dest, "wt") as _out:
 				subprocess.run(("gzip", "-c", "-"), stdin=cat_pr.stdout, stdout=_out)
@@ -130,7 +145,7 @@ def process_sample(
 		dest = os.path.join(sample_dir, f"{sample}_R1.fastq.{dest_compression}")
 		transfer_file(fastqs[0], dest, remote_input=remote_input)
 
-		yield sample, False
+		yield sample, False, 1
 
 	elif fastqs:
 
@@ -166,23 +181,37 @@ def process_sample(
 
 		print("PRE", prefixes, file=sys.stderr)
 
+		def rx_filter(s, x=1):
+			return re.search(r"[._R]" + str(x) + r"$", s) and not re.search(r"(orphan|single)s?", s)
+
 		# partition fastqs into R1, R2, and 'other' sets
-		r1 = [(p, f) for p, f in zip(prefixes, fastqs) if re.search(r"[._R]1$", p)]
-		r2 = [(p, f) for p, f in zip(prefixes, fastqs) if re.search(r"[._R]2$", p)]
+		r1 = [(p, f) for p, f in zip(prefixes, fastqs) if rx_filter(p, x=1)]
+		r2 = [(p, f) for p, f in zip(prefixes, fastqs) if rx_filter(p, x=2)]
 		others = sorted(list(set(fastqs).difference({f for _, f in r1}).difference({f for _, f in r2})))
 
-		# check if R1/R2 sets have equal sizes or are empty
-		# R1 empty: potential scRNAseq (or any protocol with barcode reads in R1)
-		# R2 empty: typical single end reads with (R?)1 suffix
-		assert len(r2) == 0 or len(r1) == 0 or (r1 and len(r1) == len(r2)), "R1/R2 sets are not of the same length"
+		if False:
+			# check if R1/R2 sets have equal sizes or are empty
+			# R1 empty: potential scRNAseq (or any protocol with barcode reads in R1)
+			# R2 empty: typical single end reads with (R?)1 suffix
+			assert len(r2) == 0 or len(r1) == 0 or (r1 and len(r1) == len(r2)), "R1/R2 sets are not of the same length"
 
-		# if R1 and R2 are of equal size, check if the prefixes match
-		if len(r1) == len(r2) and r1:
-			check_pairwise(r1, r2)
+			# if R1 and R2 are of equal size, check if the prefixes match
+			if len(r1) == len(r2) and r1:
+				check_pairwise(r1, r2)
 
-		# sort R1/R2 for concatenation, get rid off prefixes
-		r1 = sorted(f for _, f in r1)
-		r2 = sorted(f for _, f in r2)
+			# sort R1/R2 for concatenation, get rid off prefixes
+			r1 = sorted(f for _, f in r1)
+			r2 = sorted(f for _, f in r2)
+		else:
+			reads = list(check_pairwise(r1, r2))
+			if reads:
+				others += [
+					r1 or r2
+					for r1, r2 in reads
+					if r1 is None or r2 is None
+				]
+				r1, r2 = zip(*((f1, f2) for f1, f2 in reads if f1 and f2))
+
 
 		print("R1", r1, file=sys.stderr)
 		print("R2", r2, file=sys.stderr)
@@ -197,18 +226,21 @@ def process_sample(
 
 			pathlib.Path(sample_dir).mkdir(parents=True, exist_ok=True)
 
+			n_parts = 0
 			if r1:
 				# if R1 is not empty, transfer R1-files
+				n_parts += 1
 				dest = os.path.join(sample_dir, f"{sample}_R1.fastq.{dest_compression}")
 				transfer_multifiles(r1, dest, remote_input=remote_input, compression=compression)
 			if r2:
 				# if R2 is not empty, transfer R2-files,
 				# if R1 is empty, rename R2 to R1 so that files can be processed as normal single-end
+				n_parts += 1
 				target_r = "R2" if r1 else "R1"
 				dest = os.path.join(sample_dir, f"{sample}_{target_r}.fastq.{dest_compression}")
 				transfer_multifiles(r2, dest, remote_input=remote_input, compression=compression)
 		
-			yield sample, bool(r1 and r2)
+			yield sample, bool(r1 and r2), bool(r1 or r2) + bool(others)
 
 		if others:
 			# if single-end reads exist,
@@ -221,7 +253,7 @@ def process_sample(
 			dest = os.path.join(sample_dir, f"{sample}_R1.fastq.{dest_compression}")
 			transfer_multifiles(others, dest, remote_input=remote_input, compression=compression)
 
-			yield sample, bool(r1 or r2)
+			yield sample, bool(r1 or r2), bool(r1 or r2) + bool(others)
 		
 
 def is_fastq(f, valid_fastq_suffixes, valid_compression_suffixes):
@@ -278,6 +310,7 @@ def main():
 	ap.add_argument("--valid-fastq-suffixes", type=str, default="fastq,fq")
 	ap.add_argument("--valid-compression-suffixes", type=str, default="gz,bz2")
 	ap.add_argument("--add_sample_suffix", type=str)
+	ap.add_argument("--override_pair_check", action="store_true")
 
 	args = ap.parse_args()
 
@@ -339,8 +372,8 @@ def main():
 			except Exception as e:
 				raise ValueError(f"Encountered problems processing sample '{sample}': {e}.\nPlease check your file names.")
 			else:
-				for sample, is_paired in renamed:
-					print(sample, int(is_paired), sep="\t", file=lib_out)
+				for sample, is_paired, n_parts in renamed:
+					print(sample, int(is_paired), n_parts, sep="\t", file=lib_out)
 
 if __name__ == "__main__":
 	main()
