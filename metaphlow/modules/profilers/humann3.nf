@@ -1,5 +1,5 @@
 process reduce_metaphlan_profiles {
-    container = "registry.git.embl.org/schudoma/humann3-docker:latest"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
     label "humann3"
     label "medium"
 
@@ -26,7 +26,7 @@ process reduce_metaphlan_profiles {
 
 
 process generate_humann_joint_index {
-    container = "registry.git.embl.org/schudoma/humann3-docker:latest"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
     label "humann3"
     label "process_high"
 	
@@ -51,7 +51,7 @@ process generate_humann_joint_index {
 
 process run_humann3 {
     publishDir params.output_dir, mode: "copy"
-    container = "registry.git.embl.org/schudoma/humann3-docker:latest"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
     label "humann3"
     label "process_high"
 
@@ -103,7 +103,7 @@ process reformat_genefamily_table {
     publishDir params.output_dir, mode: "copy"
     label "humann3"
     label "process_single"
-    container = "registry.git.embl.org/schudoma/humann3-docker:latest"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
 
     input:
         tuple val(sample), path(hm_table)
@@ -130,7 +130,7 @@ process reformat_genefamily_table {
 process humann_join_tables {
     tag "${tabletype}"
     publishDir params.output_dir, mode: "copy"
-    container = "registry.git.embl.org/schudoma/humann3-docker:latest"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
     label "humann3"
     label "process_single"
     
