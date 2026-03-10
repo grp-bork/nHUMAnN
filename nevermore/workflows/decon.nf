@@ -35,7 +35,7 @@ workflow nevermore_decon {
 				hostile(preprocessed_ch, params.hostile_db)
 				preprocessed_ch = hostile.out.reads
 
-			} else if ((params.remove_host != false && params.remove_host != null ) || params.remove_host == "kraken") {
+			} else if (params.remove_host == "kraken2") {
 
 				remove_host_kraken2_individual(preprocessed_ch, params.remove_host_kraken2_db)	
 				preprocessed_ch = remove_host_kraken2_individual.out.reads
