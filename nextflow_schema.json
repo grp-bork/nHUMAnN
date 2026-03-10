@@ -26,7 +26,7 @@
 					"format": "directory-path",
 					"hidden": true,
                     "description": "Path to a kraken2 database",
-					"default": "/vol/data/databases/clowm/CLDB-018fde8b0aa373a5ba7d3236bb921cc9/018fde8b0aac74889c57f7b1af5f87cb/hg38_silva_genome"
+					"default": ""
                 }
             },
             "required": [
@@ -49,7 +49,7 @@
                 "input_dir_structure": {
                     "type": "string",
                     "description": "Are the input files stored at base-level of input directory ('flat') or as one subdirectory per sample ('tree')?",
-                    "default": "tree"
+                    "default": "flat"
                 },
                 "output_dir": {
                     "type": "string",
@@ -61,21 +61,21 @@
                     "format": "directory-path",
                     "description": "Path to metaphlan4 database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-0190034231947aec9710260cbaea023c/019031cc8c507432b3da4d50a89ba8e6"
+                    "default": ""
                 },
 				"humann_nuc_db": {
                     "type": "string",
                     "format": "directory-path",
                     "description": "Path to HUMAnN3 nucleotide database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-01900362afd57ded827c2f9e934b07ea/01900362afdb7381ae9f8dfe0b87eaf2"
+                    "default": ""
                 },
 				"humann_prot_db": {
                     "type": "string",
                     "format": "directory-path",
                     "description": "Path to HUMAnN3 protein database",
 					"hidden": true,
-                    "default": "/vol/data/databases/clowm/CLDB-01900372f55678718c07a9fa387980cd/01900c54af457b5a909a449482340ace"
+                    "default": ""
                 }
 			},
             "required": [
