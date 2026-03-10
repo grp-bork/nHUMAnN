@@ -11,7 +11,6 @@ include { humann3 } from "./metaphlow/workflows/humann3"
 workflow {
 
 	fastq_input(
-		// Channel.fromPath(params.input_dir + "/*", type: "dir"),
 		Channel.fromPath(params.input_dir + "/**"),
 		Channel.of(null)
 	)
@@ -35,7 +34,7 @@ workflow {
 			sample_id = sample.id.replaceAll(/\.singles$/, "")
 			return tuple(sample_id, fastqs)
 		}
-		.groupTuple()
+		.groupTuple(size: 2, remainder: true)
 		.map { sample_id, fastqs ->
 			def meta = [:]
 			meta.id = sample_id				

@@ -1,11 +1,9 @@
 nextflow.enable.dsl=2
 
 include { classify_sample; classify_sample_with_library_info } from "../modules/functions"
-
+include { bam2fq } from "../modules/converters/bam2fq"
 
 params.bam_input_pattern = "**.bam"	
-
-params.input_dir_structure = "tree"
 
 def bam_suffix_pattern = params.bam_input_pattern.replaceAll(/\*/, "")
 
@@ -36,6 +34,9 @@ process transfer_bams {
 
 
 process prepare_fastqs {
+	// container "ghcr.io/astral-sh/uv:python3.14-trixie-slim"
+	// container "registry.git.embl.org/schudoma/portraits_metatraits:latest"
+	container "quay.io/biocontainers/pandas:2.2.1"
 	label "default"
 
 	input:
@@ -60,11 +61,6 @@ process prepare_fastqs {
 		prepare_fastqs.py -i reads -o fastq -p ${input_dir_prefix} ${custom_suffixes} ${remote_option} ${remove_suffix} ${libsfx_param}
 		"""
 }
-
-
-
-
-
 
 
 workflow remote_fastq_input {
@@ -114,7 +110,6 @@ workflow fastq_input {
 		}
 
 		fastq_ch = fastq_ch
-			// .map { file -> return tuple(file.getParent().getName(), file) }
 			.groupTuple(by: 0)
 			.combine(libsfx)
 			.map { sample_id, files, suffix -> return tuple(sample_id, files, (params.remote_input_dir != null || params.remote_input_dir), suffix) }
@@ -132,23 +127,23 @@ workflow fastq_input {
 
 		library_info_ch = prepare_fastqs.out.library_info
 			.splitCsv(header:false, sep:'\t', strip:true)
-			.map { row ->
-				return tuple(row[0], row[1])
-			}
+			.map { row -> [ row[0], row[1], row[2] ] }
 
 		prepped_fastq_ch = prepare_fastqs.out.singles
-			.map { sample_id, files -> return tuple("${sample_id}.singles", files, false) }
+			.map { sample_id, files -> [ "${sample_id}.singles", files, false ] }
 			.mix(prepare_fastqs.out.pairs
-				.map { sample_id, files -> return tuple(sample_id, files, true) }
+				.map { sample_id, files -> [ sample_id, files, true ] }
 			)
 			.join(by: 0, library_info_ch)
-			.map { sample_id, files, is_paired, library_is_paired ->
+			.map { sample_id, files, is_paired, library_is_paired, n_parts ->
 				def meta = [:]
 				meta.id = sample_id
 				meta.is_paired = is_paired
 				meta.library = (library_is_paired == "1") ? "paired" : "single"
-				return tuple(meta, [files].flatten())
+				meta.multilib = n_parts != "1"
+				return [ meta, [files].flatten() ]
 			}
+
 		prepped_fastq_ch.dump(pretty: true, tag: "prepped_fastq_ch")
 
 	emit:
@@ -175,7 +170,7 @@ workflow bam_input {
 
 		fastq_ch = Channel.empty()
 		if (params.do_bam2fq_conversion) {
-			bam2fq(bam_ch)
+			bam2fq(bam_ch, false)
 			fastq_ch = bam2fq.out.reads
 				.map { classify_sample(it[0].id, it[1]) }
 		}
@@ -183,4 +178,3 @@ workflow bam_input {
 		bamfiles = bam_ch
 		fastqs = fastq_ch
 }
-

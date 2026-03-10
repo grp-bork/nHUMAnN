@@ -45,8 +45,9 @@ workflow nevermore_pack_reads {
 		single_ch
 			.map {
 				sample, fastq ->
-					sample.id = sample.id.replaceAll(/.(orphans|singles|chimeras)$/, ".singles")
-					return tuple(sample, fastq)
+					def meta = sample.clone()
+					meta.id = sample.id.replaceAll(/.(orphans|singles|chimeras)$/, ".singles")
+					return tuple(meta, fastq)
 			}
 			.branch {
 				single_end: it[0].library == "single"
@@ -54,21 +55,41 @@ workflow nevermore_pack_reads {
 			}
 		.set { single_reads_ch }
 
-		def se_group_size = 2 - (params.drop_orphans ? 1 : 0)
+		def orphan_merge = !params.single_end_libraries && !params.drop_orphans && params.run_preprocessing //&& params.remove_host;
+		def se_group_size = 2 - ((orphan_merge) ? 0 : 1);
 
 		single_reads_ch.paired_end
-			.groupTuple(sort: true, size: se_group_size, remainder: true)
 			.branch {
-				do_merge: it[1].size() > 1
+				do_merge: it[0].multilib
 				no_merge: true
 			}
 			.set { pe_singles_ch }
 
 		merged_single_ch = pe_singles_ch.do_merge
+			.map { meta, fastq -> [ meta.id, fastq ] }
+			.groupTuple(by: 0, sort: true, size: se_group_size, remainder: true)
+			.map { sample_id, fastqs ->
+				def meta = [:]
+				meta.id = sample_id
+				meta.is_paired = false
+				meta.library = "paired"
+				meta.merged = true
+				meta.multilib = true
+
+				return [meta, [fastqs].flatten()]
+			}
+
+		merged_single_ch.dump(pretty: true, tag: "merged_single_ch")
 
 		/*	then merge single-read file groups into single files */
 
-		merge_single_fastqs(merged_single_ch)
+		merged_ch = Channel.empty()
+		if (!params.single_end_libraries) {
+
+			merge_single_fastqs(merged_single_ch)
+			merged_ch = merge_single_fastqs.out.fastq
+
+		} 
 
 		/* 	take all single-read files except for the qc-survivors,
 			concat with merged single-read files (takes care of single-end qc-survivors),
@@ -85,15 +106,15 @@ workflow nevermore_pack_reads {
 				meta.merged = false
 				return tuple(meta, fastq)
 			}
-			.mix(pe_singles_ch.no_merge)
-			.mix(single_reads_ch.single_end)
-			.mix(paired_ch)
-			.mix(merge_single_fastqs.out.fastq)
+			.mix(pe_singles_ch.no_merge)         // raw PE library orphans
+			.mix(single_reads_ch.single_end)     // SE library reads
+			.mix(paired_ch)                      // PE library pairs
+			.mix(merged_ch)                      // merged preprocessed PE library orphans
 
 		fastq_prep_ch = paired_ch
 			.mix(single_reads_ch.single_end)
 			.mix(pe_singles_ch.no_merge)
-			.mix(merge_single_fastqs.out.fastq)
+			.mix(merged_ch)
 
 	emit:
 		fastqs = fastq_prep_ch
