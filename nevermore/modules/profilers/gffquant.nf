@@ -1,38 +1,43 @@
 params.gq_aligner = "bwa"
 params.gq_min_seqlen = params.min_alignment_length
-params.gq_single_end_library = params.single_end_library
+params.gq_single_end_library = params.single_end_libraries
 params.gq_min_identity = params.min_identity
 params.gq_mode = "genes"
 params.gq_ambig_mode = "1overN"
+params.gq_restrict_metrics = "raw,lnorm,scaled,rpkm"
 
 
 process stream_gffquant {
-	publishDir params.output_dir, mode: "copy"
+	tag "gffquant.${sample}"
+	// publishDir "${params.output_dir}/profiles", mode: "copy", pattern: "*.{txt.gz,pd.txt}"
+	// publishDir "${params.output_dir}", mode: "copy", pattern: "logs/*.log"
 	label "gffquant"
 	label "large"
-
-	tag "gffquant.${sample}"
 
 	input:
 		tuple val(sample), path(fastqs)
 		path(gq_db)
-		// path(reference)
+
 	output:
-		tuple val(sample), path("profiles/${sample}/*.{txt.gz,pd.txt}"), emit: results //, optional: (!params.gq_panda) ? true : false
-		tuple val(sample), path("profiles/${sample}/*.{txt.gz,pd.txt}"), emit: profiles //, optional: (params.gq_panda) ? true : false
+		tuple val(sample), path("${sample}/*.{txt.gz,pd.txt}"), emit: results
+		tuple val(sample), path("${sample}/*.{txt.gz,pd.txt}"), emit: profiles
 		tuple val(sample), path("logs/${sample}.log")
 		tuple val(sample), path("alignments/${sample}/${sample}*.sam"), emit: alignments, optional: true
+		//path("${sample}"), emit: profile_dir
+		tuple val(sample), path("${sample}/${sample}.gene_ids.txt.gz"), emit: gene_ids
 
 	script:
-			def gq_output = "-o profiles/${sample}/${sample}"
+			def gq_output = "-o ${sample}/${sample}"
 
 			def gq_params = "-m ${params.gq_mode} --ambig_mode ${params.gq_ambig_mode}"
-			// gq_params += (params.gq_strand_specific) ? " --strand_specific" : ""
 			gq_params += (params.gq_min_seqlen) ? (" --min_seqlen " + params.gq_min_seqlen) : ""
 			gq_params += (params.gq_min_identity) ? (" --min_identity " + params.gq_min_identity) : ""
-			// gq_params += (params.gq_restrict_metrics) ? " --restrict_metrics ${params.gq_restrict_metrics}" : ""
+			// LEGACY PARAMETERS, partially not implemented in newer gffquant
+			// gq_params += (params.gq_strand_specific) ? " --strand_specific" : ""
+			gq_params += (params.gq_restrict_metrics) ? " --restrict_metrics ${params.gq_restrict_metrics}" : ""
 			// gq_params += (params.gq_keep_alignments) ? " --keep_alignment_file ${sample}.sam" : ""
 			// gq_params += (params.gq_unmarked_orphans) ? " --unmarked_orphans" : ""
+			def mkdir_alignments = (params.keep_alignment_file != null && params.keep_alignment_file != false) ? "mkdir -p alignments/${sample}/" : ""
 
 			gq_params += " -t ${task.cpus}"
 
@@ -41,14 +46,15 @@ process stream_gffquant {
 			}
 
 			def input_files = ""
-			// we cannot auto-detect SE vs. PE-orphan!
-			if (params.gq_single_end_library) {
-				//input_files += "--singles \$(find . -maxdepth 1 -type l -name '*_R1.fastq.gz')"	
+			r1_files = fastqs.findAll( { it.name.endsWith("_R1.fastq.gz") && !it.name.matches("(.*)(singles|orphans|chimeras)(.*)") } )
+			r2_files = fastqs.findAll( { it.name.endsWith("_R2.fastq.gz") } )
+			orphans = fastqs.findAll( { it.name.matches("(.*)(singles|orphans|chimeras)(.*)") } )
+
+			if (params.gq_single_end_library || (r1_files.size() + r2_files.size() + orphans.size() == 1)) {
+
 				input_files += "--fastq-singles ${fastqs}"
+
 			} else {
-				r1_files = fastqs.findAll( { it.name.endsWith("_R1.fastq.gz") && !it.name.matches("(.*)(singles|orphans|chimeras)(.*)") } )
-				r2_files = fastqs.findAll( { it.name.endsWith("_R2.fastq.gz") } )
-				orphans = fastqs.findAll( { it.name.matches("(.*)(singles|orphans|chimeras)(.*)") } )
 
 				if (r1_files.size() != 0) {
 					input_files += "--fastq-r1 ${r1_files.join(' ')}"
@@ -60,26 +66,19 @@ process stream_gffquant {
 					input_files += " --fastq-orphans ${orphans.join(' ')}"
 				}
 
-				// input_files += "--fastq-r1 \$(find . -maxdepth 1 -type l -name '*_R1.fastq.gz' | grep -v singles)"
-				// input_files += " --fastq-r2 \$(find . -maxdepth 1 -type l -name '*_R2.fastq.gz')"
-				// input_files += " --fastq-orphans \$(find . -maxdepth 1 -type l -name '*singles*.fastq.gz')"
 			}
 	
-			def gq_cmd = "gffquant ${gq_output} ${gq_params} --db GQ_DATABASE --aligner ${params.gq_aligner} ${input_files}"
-			def mkdir_alignments = (params.keep_alignment_file != null && params.keep_alignment_file != false) ? "mkdir -p alignments/${sample}/" : ""
-			// --reference \$(readlink ${reference})
-			// cp -v ${gq_db}/*sqlite3 GQ_DATABASE
-			// ref=\$(ls ${gq_db}/*.bwt | sed "s/\.bwt//")
+			def gq_cmd = "gffquant ${gq_output} ${gq_params} --db \$GQ_DATABASE --aligner ${params.gq_aligner} ${input_files}"
+			
 			"""
 			set -e -o pipefail
-			mkdir -p logs/ tmp/ profiles/
+			mkdir -p logs/ tmp/
 			${mkdir_alignments}
-			echo 'Copying database...'
-			cp -v \$(dirname \$(readlink ${gq_db}))/*sqlite3 GQ_DATABASE
-
+			GQ_DATABASE=\$(dirname \$(readlink ${gq_db}))/*sqlite3
 
 			${gq_cmd} --reference \$(readlink ${gq_db}) &> logs/${sample}.log
-			rm -rfv GQ_DATABASE* tmp/
+			gzip -dc ${sample}/${sample}.gene_counts.txt.gz | cut -f 1 | gzip -c - > ${sample}/${sample}.gene_ids.txt.gz
+			rm -rfv tmp/
 			"""
 
 }
