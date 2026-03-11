@@ -2,6 +2,7 @@ process reduce_metaphlan_profiles {
     container "registry.git.embl.org/schudoma/humann3-docker:latest"
     label "humann3"
     label "medium"
+    tag "Reducing metaphlan profiles..."
 
 	input:
 		path(mp_collated_profiles)
@@ -54,6 +55,7 @@ process run_humann3 {
     container "registry.git.embl.org/schudoma/humann3-docker:latest"
     label "humann3"
     label "process_high"
+    tag "${sample}"
 
     input:
         tuple val(sample), path(mp_profile), path(fastq_files)
@@ -104,6 +106,7 @@ process reformat_genefamily_table {
     label "humann3"
     label "process_single"
     container "registry.git.embl.org/schudoma/humann3-docker:latest"
+    tag "${sample}"
 
     input:
         tuple val(sample), path(hm_table)
