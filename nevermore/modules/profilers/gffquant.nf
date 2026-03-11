@@ -68,17 +68,27 @@ process stream_gffquant {
 
 			}
 	
-			def gq_cmd = "gffquant ${gq_output} ${gq_params} --db \$GQ_DATABASE --aligner ${params.gq_aligner} ${input_files}"
+
+			def db_command = (params.copy_database) 
+				? "cp -v \$(dirname \$(readlink ${gq_db}))/*.sqlite3 GQ_DATABASE"
+				: "GQ_DATABASE=\$(dirname \$(readlink ${gq_db}))/*.sqlite3"
 			
+			def db_call = (params.copy_database) ? "--db GQ_DATABASE" : "--db \$GQ_DATABASE"
+			def db_clean = (params.copy_database) ? "rm -fv GQ_DATABASE" : ""
+			
+			// def gq_cmd = "gffquant ${gq_output} ${gq_params} --db \$GQ_DATABASE --aligner ${params.gq_aligner} ${input_files}"
+			def gq_cmd = "gffquant ${gq_output} ${gq_params} ${db_call} --aligner ${params.gq_aligner} ${input_files}"
+			// GQ_DATABASE=\$(dirname \$(readlink ${gq_db}))/*sqlite3
 			"""
 			set -e -o pipefail
 			mkdir -p logs/ tmp/
 			${mkdir_alignments}
-			GQ_DATABASE=\$(dirname \$(readlink ${gq_db}))/*sqlite3
+			${db_command}
 
-			${gq_cmd} --reference \$(readlink ${gq_db}) &> logs/${sample}.log
+			${gq_cmd} --reference \$(readlink ${gq_db}) | tee logs/${sample}.log
 			gzip -dc ${sample}/${sample}.gene_counts.txt.gz | cut -f 1 | gzip -c - > ${sample}/${sample}.gene_ids.txt.gz
 			rm -rfv tmp/
+			${db_clean}
 			"""
 
 }
