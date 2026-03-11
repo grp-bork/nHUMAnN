@@ -43,7 +43,7 @@ process qc_bbduk {
         if (r2_files.size() != 0) {
             read2 += "in2=${r2_files[0]} out2=qc_reads/${sample.id}/${sample.id}_R2.fastq.gz outs=tmp_orphans.fq"
             orphans += "qc_reads/${sample.id}/${sample.id}.orphans_R1.fastq.gz"
-            orphan_filter += "bbduk.sh -Xmx${maxmem}g t=${task.cpus} ${trim_params} in=tmp_orphans.fq out=${orphans}"
+            orphan_filter += "bbduk.sh -Xmx${maxmem}g t=${task.cpus} ${trim_params} qin=33 in=tmp_orphans.fq out=${orphans}"
             orphan_check = """
             if [[ -z "\$(gzip -dc ${orphans} | head -n 1)" ]]; then
                 rm ${orphans}

@@ -1,9 +1,8 @@
 process reduce_metaphlan_profiles {
-    // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
-    // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
-    // container = "registry.git.embl.de/schudoma/humann3-docker:latest"
-    container "ghcr.io/grp-bork/nhumann:main"
-    label "default"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+    label "humann3"
+    label "medium"
+    tag "Reducing metaphlan profiles..."
 
 	input:
 		path(mp_collated_profiles)
@@ -28,11 +27,8 @@ process reduce_metaphlan_profiles {
 
 
 process generate_humann_joint_index {
-    // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
-    // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
-    // container = "registry.git.embl.de/schudoma/humann3-docker:latest"
-    container "ghcr.io/grp-bork/nhumann:main"
-
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+    label "humann3"
     label "process_high"
 	
 	input:
@@ -55,13 +51,11 @@ process generate_humann_joint_index {
 
 
 process run_humann3 {
-    // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
-    // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
     publishDir params.output_dir, mode: "copy"
-    // container = "registry.git.embl.de/schudoma/humann3-docker:latest"
-    container "ghcr.io/grp-bork/nhumann:main"
-
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+    label "humann3"
     label "process_high"
+    tag "${sample}"
 
     input:
         tuple val(sample), path(mp_profile), path(fastq_files)
@@ -108,10 +102,11 @@ process run_humann3 {
 
 
 process reformat_genefamily_table {
-    // container "quay.io/biocontainers/humann:3.7--pyh7cba7a3_1"
-    // container "quay.io/biocontainers/humann:3.8--pyh7cba7a3_0"
     publishDir params.output_dir, mode: "copy"
-    container = "registry.git.embl.de/schudoma/humann3-docker:latest"
+    label "humann3"
+    label "process_single"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+    tag "${sample}"
 
     input:
         tuple val(sample), path(hm_table)
@@ -134,3 +129,27 @@ process reformat_genefamily_table {
     --output ${sample}/
     """
 }   
+
+process humann_join_tables {
+    tag "${tabletype}"
+    publishDir params.output_dir, mode: "copy"
+    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+    label "humann3"
+    label "process_single"
+    
+    input:
+    tuple val(tabletype), path(tables)
+
+    output:
+    path("humann3/collated/humann3_${tabletype}.collated.tsv")
+
+    script:
+    """
+    mkdir -p humann3/collated/
+
+    humann_join_tables -i . -o humann3/collated/humann3_${tabletype}.collated.tsv --file_name .tsv
+    """
+    
+
+
+}

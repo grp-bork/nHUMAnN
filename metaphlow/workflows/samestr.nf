@@ -1,15 +1,48 @@
-include { run_samestr_convert; run_samestr_merge; run_samestr_filter; run_samestr_stats; run_samestr_compare; run_samestr_summarize } from "../modules/profilers/samestr"
-params.samestr_marker_db = "/scratch/schudoma/databases/samestr/mpa_vOct22_CHOCOPhlAnSGB_202212/marker_db/"
+include { run_samestr_convert; run_samestr_merge; run_samestr_filter; run_samestr_stats; run_samestr_compare; run_samestr_summarize; collate_samestr_stats } from "../modules/profilers/samestr"
 
-workflow samestr {
+
+workflow samestr_post_merge {
+	take:
+		ss_merged
+		tax_profiles
+	main:
+		run_samestr_filter(ss_merged, params.samestr_marker_db)
+
+		run_samestr_stats(run_samestr_filter.out.sstr_npy, params.samestr_marker_db)
+		collate_samestr_stats(run_samestr_stats.out.sstr_stats.collect())
+
+		run_samestr_compare(run_samestr_filter.out.sstr_npy, params.samestr_marker_db)
+
+		run_samestr_summarize(
+			run_samestr_compare.out.sstr_compare.collect(),
+			tax_profiles.map { sample, table -> return table }.collect(),
+			params.samestr_marker_db
+		)
+
+
+}
+
+
+workflow samestr_post_convert {
+	take:
+		ss_converted
+		tax_profiles
+	main:
+		run_samestr_merge(ss_converted, params.samestr_marker_db)
+
+		samestr_post_merge(run_samestr_merge.out.sstr_npy, tax_profiles)
+}
+
+
+workflow samestr_full {
 
 	take:
-		mp4_sam
-		mp4_tables
+		alignments
+		tax_profiles
 
 	main:
 		run_samestr_convert(
-			mp4_sam.join(mp4_tables),
+			alignments.join(tax_profiles),
 			params.samestr_marker_db
 		)
 
@@ -22,19 +55,8 @@ workflow samestr {
 					return tuple(species, file)
 			}
 			.groupTuple(sort: true)
-            
-		run_samestr_merge(grouped_npy_ch, params.samestr_marker_db)
-		run_samestr_filter(
-			run_samestr_merge.out.sstr_npy,
-			params.samestr_marker_db
-		)
-		run_samestr_stats(run_samestr_filter.out.sstr_npy, params.samestr_marker_db)
-		run_samestr_compare(run_samestr_filter.out.sstr_npy, params.samestr_marker_db)
 
-		run_samestr_summarize(
-			run_samestr_compare.out.sstr_compare.collect(),
-			mp4_tables.map { sample, table -> return table }.collect(),
-			params.samestr_marker_db			
-		)
-
+		if (!params.stop_after_convert) {
+			samestr_post_convert(grouped_npy_ch, tax_profiles)
+		}
 }

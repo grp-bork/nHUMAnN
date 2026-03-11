@@ -27,6 +27,7 @@ workflow gffquant_flow {
 			.filter { !it.name.endsWith("Counter.txt.gz") }
 			.filter { params.collate_gene_counts || !it.name.endsWith("gene_counts.txt.gz") }
 			.filter { params.collate_gene_counts || !it.name.endsWith("gene_counts.pd.txt")}
+			.filter { !it.name.endsWith("gene_ids.txt.gz") }
 			.map { file -> 
 				def category = file.name
 					// .replaceAll(/\.txt(\.gz)?$/, "")

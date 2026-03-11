@@ -5,13 +5,14 @@ nextflow.enable.dsl=2
 include { nevermore_simple_preprocessing } from "./prep"
 include { fastqc } from "../modules/qc/fastqc"
 include { multiqc } from "../modules/qc/multiqc"
-include { collate_stats } from "../modules/collate"
+include { collate_stats } from "../modules/stats"
 include { nevermore_align } from "./align"
 include { nevermore_pack_reads } from "./pack"
 include { nevermore_qa } from "./qa"
 include { nevermore_decon } from "./decon"
 
 
+params.run_preprocessing = params.run_qc
 def do_preprocessing = (!params.skip_preprocessing || params.run_preprocessing)
 def do_alignment = params.run_gffquant || !params.skip_alignment
 def do_stream = params.gq_stream
@@ -56,6 +57,9 @@ workflow nevermore_main {
 			collate_ch = nevermore_qa.out.readcounts_ch
 
 		}
+
+		collate_stats(collate_ch.collect())
+
 
 	emit:
 		fastqs = nevermore_pack_reads.out.fastqs

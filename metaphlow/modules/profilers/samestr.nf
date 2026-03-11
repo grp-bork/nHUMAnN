@@ -1,7 +1,8 @@
 process run_samestr_convert {
-    container "registry.git.embl.de/schudoma/samestr-docker:latest"
+    container "ghcr.io/danielpodlesny/samestr:v1.2025.102"
     tag "${sample.id}"
-    label "highmem_large"
+    label "large"
+    label "samestr"
 
     
     input:
@@ -32,9 +33,10 @@ process run_samestr_convert {
 
 process run_samestr_merge {
     publishDir params.output_dir, mode: "copy"
-    container "registry.git.embl.de/schudoma/samestr-docker:latest"
+    container "ghcr.io/danielpodlesny/samestr:v1.2025.102"
     tag "${species}"
-    label "highmem_large"
+    label "large"
+    label "samestr"
     
     input:
         tuple val(species), path(sstr_npy)
@@ -60,9 +62,10 @@ process run_samestr_merge {
 }
 
 process run_samestr_filter {
-    container "registry.git.embl.de/schudoma/samestr-docker:latest"
+    container "ghcr.io/danielpodlesny/samestr:v1.2025.102"
     tag "${species}"
-    label "highmem_large"
+    label "large"
+    label "samestr"
     
     input:
         tuple val(species), path(sstr_npy), path(sstr_names)
@@ -99,9 +102,10 @@ process run_samestr_filter {
 
 process run_samestr_stats {
     publishDir params.output_dir, mode: "copy"
-    container "registry.git.embl.de/schudoma/samestr-docker:latest"
+    container "ghcr.io/danielpodlesny/samestr:v1.2025.102"
     tag "${species}"
     label "large"
+    label "samestr"
     
     input:
         tuple val(species), path(sstr_npy), path(sstr_names)
@@ -122,15 +126,38 @@ process run_samestr_stats {
     """
 }
 
+process collate_samestr_stats {
+    container "quay.io/biocontainers/gawk:5.1.0--2"
+    publishDir params.output_dir, mode: "copy"
+    tag "ohm..nom..nom!"
+    label "large"
+
+    input:
+    path(stats_files)
+
+    output:
+    path("sstr_aln_stats.collated.tsv.gz"), emit: sstr_stats
+
+    script:
+    // find . -maxdepth 1 -mindepth 1 -type f -name '*.aln_stats.txt' | sort | xargs -I {} awk -F '\t' -v OFS='\t' -v clade={} 'NR>1 { print gensub(/\.aln_stats.txt/, "", "g", gensub(/.+\//, "", "g", clade)),$0 }' {} | head
+    """
+    head -n 1 ${stats_files[0]} | sed "s/^/Clade\\t/" > sstr_aln_stats.collated.tsv
+    find . -maxdepth 1 -mindepth 1 -name '*.aln_stats.txt' | sort | xargs -I {} awk -F '\\t' -v OFS='\\t' -v clade={} 'NR>1 { print gensub(/\\.aln_stats.txt/, "", "g", gensub(/.+\\//, "", "g", clade)),\$0; }' {} >> sstr_aln_stats.collated.tsv
+    gzip sstr_aln_stats.collated.tsv
+    """
+    
+}
+
 process run_samestr_compare {
     publishDir params.output_dir, mode: "copy"
-    container "registry.git.embl.de/schudoma/samestr-docker:latest"
+    container "ghcr.io/danielpodlesny/samestr:v1.2025.102"
     tag "${species}"
-    label "highmem_large"
+    label "large"
+    label "samestr"
     
     input:
         tuple val(species), path(sstr_npy), path(sstr_names)
-	path(marker_db)
+	    path(marker_db)
 
     output:
         tuple \
@@ -153,8 +180,9 @@ process run_samestr_compare {
 
 process run_samestr_summarize {
     publishDir params.output_dir, mode: "copy"
-    container "registry.git.embl.de/schudoma/samestr-docker:latest"
+    container "ghcr.io/danielpodlesny/samestr:v1.2025.102"
     label "large"
+    label "samestr"
     
     input:
         path(sstr_data)
@@ -172,7 +200,7 @@ process run_samestr_summarize {
     """
     mkdir profiles/
     # TODO: this will only work with metaphlan, not motus
-    find . -maxdepth 1 -name '*.mp4.txt' -exec mv -v {} profiles/ \\;
+    find . -maxdepth 1  \\( -name '*.mp4.txt' -o -name '*.motus.txt' \\) -exec mv -v {} profiles/ \\;
 
     samestr --verbosity DEBUG \
     summarize \
