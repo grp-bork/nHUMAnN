@@ -38,6 +38,7 @@ process prepare_fastqs {
 	// container "registry.git.embl.org/schudoma/portraits_metatraits:latest"
 	container "quay.io/biocontainers/pandas:2.2.1"
 	label "default"
+	tag "${sample}"
 
 	input:
 		tuple val(sample), path(files), val(remote_input), val(library_suffix)
