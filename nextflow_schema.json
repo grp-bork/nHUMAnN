@@ -48,6 +48,7 @@
                 },
                 "input_dir_structure": {
                     "type": "string",
+                    "enum": ["flat", "tree"],
                     "description": "Are the input files stored at base-level of input directory ('flat') or as one subdirectory per sample ('tree')?",
                     "default": "flat"
                 },
@@ -55,6 +56,12 @@
                     "type": "string",
                     "format": "directory-path",
                     "description": "Path to output directory"
+                },
+                "mp4_db_version": {
+                    "type": "string",
+                    "enum": ["vOct22", "vJun23"],
+                    "description": "Please confirm the metaphlan4 chocophlan database version. This must match the version chosen for `mp4_db`.",
+                    "default": "vOct22"
                 },
                 "mp4_db": {
                     "type": "string",

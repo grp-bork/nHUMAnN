@@ -6,7 +6,8 @@
     "output_dir"
   ],
   "exampleParameters": {
-    "input_dir": "s3://workflow-exampledata/nhumann/"
+    "input_dir": "s3://workflow-exampledata/nhumann/",
+    "mp4_db_version": "vOct22"
   },
   "dois": [
     "10.5281/zenodo.13143260",
