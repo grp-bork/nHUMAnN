@@ -73,9 +73,18 @@ process run_humann3 {
         tuple val(sample), path("humann3/${sample}/${sample}_genefamilies.relab_unstratified.tsv"), emit: hm_table_unstratified
 
     script:
+
+    def merge_cmd = ""
+    if (fastq_files.findAll( { it.name.endsWith(".fastq.gz") } ).size() == 1) {
+        merge_cmd += "ln -s ${fastq_files[0]} merged.fq.gz"
+    } else {
+        merge_cmd += "cat ${fastq_files} > merged.fq.gz"
+    }
+
     """
 	mkdir -p humann3/${sample}/
-    cat ${fastq_files} > merged.fq.gz
+
+    ${merge_cmd}
 
     humann \
     --taxonomic-profile ${mp_profile} \

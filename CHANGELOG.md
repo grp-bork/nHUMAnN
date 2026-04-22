@@ -1,3 +1,7 @@
+version -> 0.11.3
+
+- preventing data duplication for single end input in run_humann (metaphlow -> 0.19.6_0.1)
+
 version -> 0.11.0
 - update nevermore to 0.15.7
   - fixed bug in kraken2 decon module
