@@ -84,7 +84,13 @@ On the command line:
 
 ## HUMAnN Profiling
 
-The default supported `HUMAnN3` version is 3.
+`nHUMAnN` runs on a 3.x version of `HUMAnN`. The exact version depends on the used CHOCOPhlAn database:
+
+| CHOCOPhlAn database             | `HUMAnN3` version |
+| ------------------------------- | ----------------- |
+| mpa_vOct22_CHOCOPhlAnSGB_202212 |        3.7        |
+| mpa_vJun23_CHOCOPhlAnSGB_202307 |        3.9        |
+
 
 ### HUMAnN databases
 
