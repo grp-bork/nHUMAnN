@@ -1,3 +1,7 @@
+version -> 0.11.4
+
+- adjusted HUMAnN3 container versions based on requested CHOCOPhlAn database
+
 version -> 0.11.3
 
 - preventing data duplication for single end input in run_humann (metaphlow -> 0.19.6_0.1)
