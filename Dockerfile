@@ -19,7 +19,7 @@ RUN git clone https://github.com/biobakery/humann.git && \
   	git checkout 4.0.6
 
 RUN conda create -y -n mp4_vOct22_v3.7 \
-	python<3.12 \
+	"python<3.12" \
 	&& cd /opt/software/metaphlan \
 	&& /opt/conda/envs/mp4_vOct22_v3.7/bin/python -m pip install . \
 	&& cd /opt/software/humann \ 
@@ -36,7 +36,7 @@ RUN conda create -y -n mp4_vOct22_v3.7 \
 
 
 RUN conda create -y -n mp4_vJun23_v3.9 \
- 	python<3.12 \
+ 	"python<3.12" \
 	&& /opt/conda/envs/mp4_vJun23_v3.9/bin/python -m pip install . \
 	&& cd /opt/software/humann \
 	&& git checkout v3.9 \
