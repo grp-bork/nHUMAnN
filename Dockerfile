@@ -21,7 +21,7 @@ WORKDIR /opt/software
 RUN git clone https://github.com/biobakery/MetaPhlAn.git metaphlan && \
   cd metaphlan && \
   git checkout 4.0.6 && \
-  pip install .
+  pip install --break-system-packages .
 
 RUN git clone https://github.com/biobakery/humann.git && \
   cd humann && \
@@ -36,7 +36,7 @@ RUN git clone https://github.com/biobakery/humann.git && \
   # sed -i "796 s/not config.matching_uniref in file/False/" humann/humann.py && \
   # sed -i "s/vOct22/vJun23/" humann/config.py && \
   #python setup.py install
-  pip install .
+  pip install --break-system-packages .
 
 
 
