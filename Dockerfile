@@ -1,7 +1,7 @@
 FROM ubuntu:26.04
 
 LABEL maintainer="cschu1981@gmail.com"
-LABEL version="3.9.cs.1"
+LABEL version="3.9.cs.1x"
 LABEL description="This is a Docker image for patching HUMAnN 3.9."
 
 
