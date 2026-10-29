@@ -1,5 +1,5 @@
 process hisat2_build {
-    container "registry.git.embl.org/schudoma/hisat2-docker:latest"
+    container "ghcr.io/cschu/align-docker:v0.6.0"
 
     input:
     tuple val(sample), path(genomeseq)
@@ -21,7 +21,7 @@ process hisat2_build {
 }
 
 process hisat2_align {
-    container "registry.git.embl.org/schudoma/hisat2-docker:latest"
+    container "ghcr.io/cschu/align-docker:v0.6.0"
 
     input:
     tuple val(sample), path(fastqs), path(index)

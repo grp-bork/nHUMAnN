@@ -1,5 +1,5 @@
 process flagstats {
-    container "registry.git.embl.org/schudoma/align-docker:latest"
+	container "ghcr.io/cschu/align-docker:v0.6.0"
     label "default"
 
     input:
@@ -41,7 +41,6 @@ process flagstats_libtype {
 
 
 process collate_stats {
-    // container "registry.git.embl.org/schudoma/portraits_metatraits:latest"
     container "quay.io/biocontainers/pandas:2.2.1"
     label "default"
 

@@ -1,5 +1,5 @@
 process bowtie2_build {
-	container "registry.git.embl.org/schudoma/bowtie2-docker:latest"
+	container "ghcr.io/cschu/align-docker:v0.6.0"
 	tag "${sample.id}"
 
 	input:
@@ -23,7 +23,7 @@ process bowtie2_build {
 
 
 process bowtie2_align {
-	container "registry.git.embl.org/schudoma/bowtie2-docker:latest"
+	container "ghcr.io/cschu/align-docker:v0.6.0"
 	tag "${sample.id}"
 
 	input:

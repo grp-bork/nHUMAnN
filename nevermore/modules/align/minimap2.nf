@@ -1,5 +1,5 @@
 process minimap2_align {
-	container "registry.git.embl.org/schudoma/minimap2-docker:latest"
+	container "ghcr.io/cschu/align-docker:v0.6.0"
 	label 'align'
 
 	input:
