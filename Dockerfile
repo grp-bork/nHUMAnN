@@ -38,6 +38,7 @@ RUN conda create -y -n mp4_vOct22_v37 \
 
 RUN conda create -y -n mp4_vJun23_v39 \
  	"python<3.12" \
+	&& cd /opt/software/metaphlan \
 	&& /opt/conda/envs/mp4_vJun23_v39/bin/python -m pip install . \
 	&& cd - \
 	&& git clone https://github.com/biobakery/humann.git \
