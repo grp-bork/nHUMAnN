@@ -1,3 +1,7 @@
+version -> 0.11.6
+
+- fixed porting error in 0.11.5
+
 version -> 0.11.5
 
 - adapted workflow to new container repo
