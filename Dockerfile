@@ -9,7 +9,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt update
 RUN apt upgrade -y
 
-RUN apt install -y wget python3-pip git
+RUN apt install -y wget python3-pip git bowtie2
 RUN apt clean
 
 WORKDIR /opt/software
