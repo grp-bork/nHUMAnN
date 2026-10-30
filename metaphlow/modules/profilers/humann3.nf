@@ -1,5 +1,5 @@
 process reduce_metaphlan_profiles {
-    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+	container "ghcr.io/grp-bork/nhumann:main"
     label "humann3"
     label "medium"
     tag "Reducing metaphlan profiles..."
@@ -7,13 +7,17 @@ process reduce_metaphlan_profiles {
 	input:
 		path(mp_collated_profiles)
 		val(reduce_function)
-	
+		val(humann_version)
+
 	output:
 		path("mp_${reduce_function}_reduced_profiles.txt"), emit: mp_reduced_profiles
-	
+
 	script:
+
+		def version_suffix = (humann_version == null) ? "" : "_${humann_version}"
+
 		"""
-		humann_reduce_table --input ${mp_collated_profiles} --output mp_${reduce_function}_reduced_profiles.txt.tmp --function ${reduce_function} --sort-by level
+		humann_reduce_table${version_suffix} --input ${mp_collated_profiles} --output mp_${reduce_function}_reduced_profiles.txt.tmp --function ${reduce_function} --sort-by level
 		sed -i "2 s/^/#/" mp_${reduce_function}_reduced_profiles.txt.tmp
 
 		awk -v OFS='\\t' '{print \$1,\$2}' mp_${reduce_function}_reduced_profiles.txt.tmp > mp_${reduce_function}_reduced_profiles.txt
@@ -21,30 +25,32 @@ process reduce_metaphlan_profiles {
 		// sed -i "2 s/^/xxx/" mp_${reduce_function}_reduced_profiles.txt.tmp
 		// <(awk '{print \$1"\t"\$2"\tadditional_species"}' tmp) > joint_max_taxonomic_profile.tsv
 		// mv mp_${reduce_function}_reduced_profiles.txt.tmp mp_${reduce_function}_reduced_profiles.txt		
-
-
 }
 
 
 process generate_humann_joint_index {
-    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+	container "ghcr.io/grp-bork/nhumann:main"
     label "humann3"
     label "process_high"
-	
+
 	input:
 		path(mp_reduced_profiles)
 		path(nuc_db)
+		val(humann_version)
 
 	output:
 		path("joint_bt2_index/**.{bt2,bt2l}"), emit: joint_bt2_index
 		path("joint_bt2_index/**.ffn"), emit: chocophlan_db
 
 	script:
+
+		def version_suffix = (humann_version == null) ? "" : "_${humann_version}"
+
 		"""
 		mkdir -p joint_bt2_index/
 		echo -e "@dummy\nA\n+\n5" > joint.fastq
 
-		humann --threads ${task.cpus} --input joint.fastq --input-format fastq --output joint_bt2_index/ --bypass-translated-search --taxonomic-profile ${mp_reduced_profiles} --nucleotide-database ${nuc_db}
+		humann${version_suffix} --threads ${task.cpus} --input joint.fastq --input-format fastq --output joint_bt2_index/ --bypass-translated-search --taxonomic-profile ${mp_reduced_profiles} --nucleotide-database ${nuc_db}
 		"""
 
 }
@@ -52,7 +58,7 @@ process generate_humann_joint_index {
 
 process run_humann3 {
     publishDir params.output_dir, mode: "copy"
-    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+    container "ghcr.io/grp-bork/nhumann:main"
     label "humann3"
     label "process_high"
     tag "${sample}"
@@ -62,6 +68,7 @@ process run_humann3 {
         path(joint_bt2_index)
 		path(chocophlan_db)
 		path(humann_prot_db)
+		val(humann_version)
 
     output:
         tuple val(sample), path("humann3/${sample}/${sample}_genefamilies.tsv"), emit: hm_genefamilies
@@ -74,39 +81,41 @@ process run_humann3 {
 
     script:
 
-    def merge_cmd = ""
-    if (fastq_files.findAll( { it.name.endsWith(".fastq.gz") } ).size() == 1) {
-        merge_cmd += "ln -s ${fastq_files[0]} merged.fq.gz"
-    } else {
-        merge_cmd += "cat ${fastq_files} > merged.fq.gz"
-    }
+		def version_suffix = (humann_version == null) ? "" : "_${humann_version}"
 
-    """
-	mkdir -p humann3/${sample}/
+    	def merge_cmd = ""
+    	if (fastq_files.findAll( { it.name.endsWith(".fastq.gz") } ).size() == 1) {
+        	merge_cmd += "ln -s ${fastq_files[0]} merged.fq.gz"
+    	} else {
+        	merge_cmd += "cat ${fastq_files} > merged.fq.gz"
+    	}
 
-    ${merge_cmd}
+   		"""
+		mkdir -p humann3/${sample}/
 
-    humann \
-    --taxonomic-profile ${mp_profile} \
-    --nucleotide-database joint_bowtie2_index \
-    --bypass-nucleotide-index \
-    --protein-database ${humann_prot_db} \
-    --input merged.fq.gz \
-    --input-format fastq.gz \
-    --output-basename ${sample} \
-    --output humann3/${sample}/ \
-    --threads ${task.cpus} \
-    --remove-temp-output
+    	${merge_cmd}
 
-    humann_renorm_table -i humann3/${sample}/${sample}_pathabundance.tsv -u relab -m community -s y -o humann3/${sample}/${sample}_pathabundance.relab.tsv
-    humann_renorm_table -i humann3/${sample}/${sample}_genefamilies.tsv -u relab -m community -s y -o humann3/${sample}/${sample}_genefamilies.relab.tsv
+    	humann${version_suffix} \
+    		--taxonomic-profile ${mp_profile} \
+    		--nucleotide-database joint_bowtie2_index \
+    		--bypass-nucleotide-index \
+    		--protein-database ${humann_prot_db} \
+    		--input merged.fq.gz \
+    		--input-format fastq.gz \
+    		--output-basename ${sample} \
+    		--output humann3/${sample}/ \
+    		--threads ${task.cpus} \
+    		--remove-temp-output
 
-    humann_split_stratified_table \
-    --input humann3/${sample}/${sample}_genefamilies.relab.tsv \
-    --output humann3/${sample}/
+    	humann_renorm_table${version_suffix} -i humann3/${sample}/${sample}_pathabundance.tsv -u relab -m community -s y -o humann3/${sample}/${sample}_pathabundance.relab.tsv
+    	humann_renorm_table${version_suffix} -i humann3/${sample}/${sample}_genefamilies.tsv -u relab -m community -s y -o humann3/${sample}/${sample}_genefamilies.relab.tsv
 
-    rm merged.fq.gz
-    """
+    	humann_split_stratified_table${version_suffix} \
+    		--input humann3/${sample}/${sample}_genefamilies.relab.tsv \
+    		--output humann3/${sample}/
+
+    	rm merged.fq.gz
+    	"""
 }
 
 
@@ -114,51 +123,56 @@ process reformat_genefamily_table {
     publishDir params.output_dir, mode: "copy"
     label "humann3"
     label "process_single"
-    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+	container "ghcr.io/grp-bork/nhumann:main"
     tag "${sample}"
 
     input:
         tuple val(sample), path(hm_table)
+		val(humann_version)
 
     output:
         path "humann3/${sample}/${sample}_genefamilies.relab_stratified.tsv", emit: hm_table_stratified
         path "humann3/${sample}/${sample}_genefamilies.relab_unstratified.tsv", emit: hm_table_unstratified
 
     script:
-    """
-	mkdir -p humann3/${sample}/
+		
+		def version_suffix = (humann_version == null) ? "" : "_${humann_version}"
 
-    humann_renorm_table \
-    --input ${hm_table} \
-    --units relab \
-    --output humann3/${sample}/${sample}_genefamilies.relab.tsv
+    	"""
+		mkdir -p humann3/${sample}/
 
-    humann_split_stratified_table \
-    --input ${sample}/${sample}_genefamilies.relab.tsv \
-    --output ${sample}/
-    """
+    	humann_renorm_table${version_suffix} \
+    		--input ${hm_table} \
+    		--units relab \
+    		--output humann3/${sample}/${sample}_genefamilies.relab.tsv
+
+    	humann_split_stratified_table${version_suffix} \
+    		--input ${sample}/${sample}_genefamilies.relab.tsv \
+    		--output ${sample}/
+    	"""
 }   
 
 process humann_join_tables {
     tag "${tabletype}"
     publishDir params.output_dir, mode: "copy"
-    container "registry.git.embl.org/schudoma/humann3-docker:latest"
+	container "ghcr.io/grp-bork/nhumann:main"
     label "humann3"
     label "process_single"
     
     input:
-    tuple val(tabletype), path(tables)
+    	tuple val(tabletype), path(tables)
+		val(humann_version)
 
     output:
-    path("humann3/collated/humann3_${tabletype}.collated.tsv")
+    	path("humann3/collated/humann3_${tabletype}.collated.tsv")
 
     script:
-    """
-    mkdir -p humann3/collated/
 
-    humann_join_tables -i . -o humann3/collated/humann3_${tabletype}.collated.tsv --file_name .tsv
-    """
-    
+		def version_suffix = (humann_version == null) ? "" : "_${humann_version}"
 
+    	"""
+    	mkdir -p humann3/collated/
 
+    	humann_join_tables${version_suffix} -i . -o humann3/collated/humann3_${tabletype}.collated.tsv --file_name .tsv
+    	"""
 }

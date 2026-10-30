@@ -9,14 +9,21 @@ workflow humann3 {
 		fastqs
 
 	main:
+
+		def humann_version = (params.mp4_db_version == null)
+			? null
+			: ((params.mp4_db_version == "vOct22") ? "37" : "39")
+
 		reduce_metaphlan_profiles(
 			mp4_abundance_table,
-			"max"
+			"max",
+			humann_version
 		)
 
 		generate_humann_joint_index(
 			reduce_metaphlan_profiles.out.mp_reduced_profiles,
-			params.humann_nuc_db
+			params.humann_nuc_db,
+			humann_version
 		)
 
 		humann_input_ch = fastqs
@@ -27,7 +34,8 @@ workflow humann3 {
 			humann_input_ch,
 			generate_humann_joint_index.out.joint_bt2_index,
 			generate_humann_joint_index.out.chocophlan_db,
-			params.humann_prot_db
+			params.humann_prot_db,
+			humann_version
 		)
 
 		collate_ch = run_humann3.out.hm_genefamilies
@@ -42,10 +50,8 @@ workflow humann3 {
 			}
 			.groupTuple(by: 0, sort: true)
 
-		humann_join_tables(collate_ch)
+		humann_join_tables(collate_ch, humann_version)
 
-		// reformat_genefamily_table(run_humann3.out.hm_genefamilies) // now part of run_humann3
+		// reformat_genefamily_table(run_humann3.out.hm_genefamilies, humann_version) // now part of run_humann3
       
 }
-
-
