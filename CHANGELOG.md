@@ -1,3 +1,7 @@
+version -> 0.11.5
+
+- adapted workflow to new container repo
+
 version -> 0.11.4
 
 - adjusted HUMAnN3 container versions based on requested CHOCOPhlAn database
