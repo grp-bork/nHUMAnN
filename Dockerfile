@@ -41,7 +41,7 @@ RUN conda create -y -n mp4_vOct22_v37 \
 	&& printf '#!/bin/sh\nexec /opt/conda/envs/mp4_vOct22_v37/bin/humann_renorm_table "$@"\n' > /usr/local/bin/humann_renorm_table_37 \
 	&& printf '#!/bin/sh\nexec /opt/conda/envs/mp4_vOct22_v37/bin/humann_split_stratified_table "$@"\n' > /usr/local/bin/humann_split_stratified_table_37 \
 	&& printf '#!/bin/sh\nexec /opt/conda/envs/mp4_vOct22_v37/bin/humann_join_tables "$@"\n' > /usr/local/bin/humann_join_tables_37 \
-	&& chmod +x /usr/local/bin/humann_*_37
+	&& chmod +x /usr/local/bin/humann*_37
 
 
 RUN conda create -y -n mp4_vJun23_v39 \
@@ -59,7 +59,7 @@ RUN conda create -y -n mp4_vJun23_v39 \
 	&& printf '#!/bin/sh\nexec /opt/conda/envs/mp4_vJun23_v39/bin/humann_renorm_table "$@"\n' > /usr/local/bin/humann_renorm_table_39 \
 	&& printf '#!/bin/sh\nexec /opt/conda/envs/mp4_vJun23_v39/bin/humann_split_stratified_table "$@"\n' > /usr/local/bin/humann_split_stratified_table_39 \
 	&& printf '#!/bin/sh\nexec /opt/conda/envs/mp4_vJun23_v39/bin/humann_join_tables "$@"\n' > /usr/local/bin/humann_join_tables_39 \
-	&& chmod +x /usr/local/bin/humann_*_39
+	&& chmod +x /usr/local/bin/humann*_39
 	
 
 
