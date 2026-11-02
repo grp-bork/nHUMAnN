@@ -48,7 +48,7 @@ process generate_humann_joint_index {
 
 		"""
 		mkdir -p joint_bt2_index/
-		echo -e "@dummy\nA\n+\n5" > joint.fastq
+		printf "@dummy\nA\n+\n5" > joint.fastq
 
 		humann${version_suffix} --threads ${task.cpus} --input joint.fastq --input-format fastq --output joint_bt2_index/ --bypass-translated-search --taxonomic-profile ${mp_reduced_profiles} --nucleotide-database ${nuc_db}
 		"""
